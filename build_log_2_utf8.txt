@@ -1,0 +1,103 @@
+﻿
+> ai_nexus@1.0.0 build
+> vite build --sourcemap
+
+[36mvite v5.0.0 [32mbuilding for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 3133 modules transformed.
+node.exe : [31msrc/pages/user-
+profile-settings/index.jsx 
+(9:7): "default" is not 
+exported by "src/components/ui/
+Checkbox.jsx", imported by "src
+/pages/user-profile-settings/in
+dex.jsx".[39m
+At C:\Program 
+Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS 
+$args
++   
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          :  
+   NotSpecified: ([31msrc/pa  
+  ges/...ndex.jsx".[39m:Str   
+ ing) [], RemoteException
+    + FullyQualifiedErrorId :  
+   NativeCommandError
+ 
+file: [36mC:/Users/OM/OneDrive
+/Desktop/ai_nexus_by_rocket.new
+/src/pages/user-profile-setting
+s/index.jsx:9:7[39m
+[33m 7: import Input from 
+'../../components/ui/Input';
+ 8: import Select from 
+'../../components/ui/Select';
+ 9: import Checkbox from 
+'../../components/ui/Checkbox';
+           ^
+10: import { 
+11:   fetchUserProfile, 
+[39m
+[31merror during build:
+RollupError: src/pages/user-pro
+file-settings/index.jsx (9:7): 
+"default" is not exported by "s
+rc/components/ui/Checkbox.jsx",
+ imported by "src/pages/user-pr
+ofile-settings/index.jsx".
+    at getRollupError (file:///
+C:/Users/OM/OneDrive/Desktop/ai
+_nexus_by_rocket.new/node_modul
+es/rollup/dist/es/shared/parseA
+st.js:401:41)
+    at error (file:///C:/Users/
+OM/OneDrive/Desktop/ai_nexus_by
+_rocket.new/node_modules/rollup
+/dist/es/shared/parseAst.js:397
+:42)
+    at Module.error (file:///C:
+/Users/OM/OneDrive/Desktop/ai_n
+exus_by_rocket.new/node_modules
+/rollup/dist/es/shared/node-ent
+ry.js:16875:16)
+    at Module.traceVariable (fi
+le:///C:/Users/OM/OneDrive/Desk
+top/ai_nexus_by_rocket.new/node
+_modules/rollup/dist/es/shared/
+node-entry.js:17327:29)
+    at 
+ModuleScope.findVariable (file:
+///C:/Users/OM/OneDrive/Desktop
+/ai_nexus_by_rocket.new/node_mo
+dules/rollup/dist/es/shared/nod
+e-entry.js:14997:39)
+    at 
+ReturnValueScope.findVariable (
+file:///C:/Users/OM/OneDrive/De
+sktop/ai_nexus_by_rocket.new/no
+de_modules/rollup/dist/es/share
+d/node-entry.js:5620:38)
+    at 
+FunctionBodyScope.findVariable 
+(file:///C:/Users/OM/OneDrive/D
+esktop/ai_nexus_by_rocket.new/n
+ode_modules/rollup/dist/es/shar
+ed/node-entry.js:5620:38)
+    at 
+ReturnValueScope.findVariable (
+file:///C:/Users/OM/OneDrive/De
+sktop/ai_nexus_by_rocket.new/no
+de_modules/rollup/dist/es/share
+d/node-entry.js:5620:38)
+    at 
+FunctionBodyScope.findVariable 
+(file:///C:/Users/OM/OneDrive/D
+esktop/ai_nexus_by_rocket.new/n
+ode_modules/rollup/dist/es/shar
+ed/node-entry.js:5620:38)
+    at Identifier.bind (file://
+/C:/Users/OM/OneDrive/Desktop/a
+i_nexus_by_rocket.new/node_modu
+les/rollup/dist/es/shared/node-
+entry.js:5394:40)[39m

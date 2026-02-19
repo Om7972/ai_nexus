@@ -1,8 +1,8 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import Button from 'components/ui/Button';
-import Icon from 'components/AppIcon';
-
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button"; // Corrected relative path
+import Icon from "../components/AppIcon";      // Corrected relative path
+// ... rest of your code     // Corrected relative path
 const NotFound = () => {
   const navigate = useNavigate();
 

@@ -12,7 +12,6 @@ const DatasetStructure = ({ dataset, onColumnSelect, selectedColumns = [] }) => 
   const mockDataset = dataset || {
     name: 'sales_data.csv',
     rows: 15420,
-    columns: 12,
     size: '2.3 MB',
     uploadedAt: new Date()?.toISOString(),
     columns: [
@@ -101,19 +100,19 @@ const DatasetStructure = ({ dataset, onColumnSelect, selectedColumns = [] }) => 
           className="flex items-center justify-between w-full text-left"
         >
           <h3 className="text-lg font-semibold text-foreground">Dataset Overview</h3>
-          <Icon 
-            name={expandedSections?.overview ? "ChevronUp" : "ChevronDown"} 
-            size={16} 
+          <Icon
+            name={expandedSections?.overview ? "ChevronUp" : "ChevronDown"}
+            size={16}
           />
         </button>
-        
+
         {expandedSections?.overview && (
           <div className="mt-4 space-y-3">
             <div className="flex items-center space-x-2">
               <Icon name="FileText" size={16} color="var(--color-secondary)" />
               <span className="text-sm font-medium text-foreground">{mockDataset?.name}</span>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Rows:</span>
@@ -144,12 +143,12 @@ const DatasetStructure = ({ dataset, onColumnSelect, selectedColumns = [] }) => 
           className="flex items-center justify-between w-full text-left mb-4"
         >
           <h3 className="text-lg font-semibold text-foreground">Columns</h3>
-          <Icon 
-            name={expandedSections?.columns ? "ChevronUp" : "ChevronDown"} 
-            size={16} 
+          <Icon
+            name={expandedSections?.columns ? "ChevronUp" : "ChevronDown"}
+            size={16}
           />
         </button>
-        
+
         {expandedSections?.columns && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -173,32 +172,30 @@ const DatasetStructure = ({ dataset, onColumnSelect, selectedColumns = [] }) => 
                 </Button>
               </div>
             </div>
-            
+
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {mockDataset?.columns?.map((column, index) => (
                 <div
                   key={index}
-                  className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                    selectedColumns?.includes(column?.name)
-                      ? 'bg-primary/10 border border-primary/20' :'hover:bg-accent/50'
-                  }`}
+                  className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer transition-colors ${selectedColumns?.includes(column?.name)
+                      ? 'bg-primary/10 border border-primary/20' : 'hover:bg-accent/50'
+                    }`}
                   onClick={() => handleColumnToggle(column?.name)}
                 >
-                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                    selectedColumns?.includes(column?.name)
-                      ? 'bg-primary border-primary' :'border-border'
-                  }`}>
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${selectedColumns?.includes(column?.name)
+                      ? 'bg-primary border-primary' : 'border-border'
+                    }`}>
                     {selectedColumns?.includes(column?.name) && (
                       <Icon name="Check" size={12} color="white" />
                     )}
                   </div>
-                  
-                  <Icon 
-                    name={getTypeIcon(column?.type)} 
-                    size={16} 
+
+                  <Icon
+                    name={getTypeIcon(column?.type)}
+                    size={16}
                     className={getTypeColor(column?.type)}
                   />
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-foreground truncate">
@@ -226,12 +223,12 @@ const DatasetStructure = ({ dataset, onColumnSelect, selectedColumns = [] }) => 
           className="flex items-center justify-between w-full text-left mb-4"
         >
           <h3 className="text-lg font-semibold text-foreground">Sample Data</h3>
-          <Icon 
-            name={expandedSections?.sample ? "ChevronUp" : "ChevronDown"} 
-            size={16} 
+          <Icon
+            name={expandedSections?.sample ? "ChevronUp" : "ChevronDown"}
+            size={16}
           />
         </button>
-        
+
         {expandedSections?.sample && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

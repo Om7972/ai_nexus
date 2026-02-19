@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../../../store/slices/authSlice';
 import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 
 const SocialLogin = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loadingProvider, setLoadingProvider] = useState(null);
 
   const socialProviders = [
@@ -36,7 +39,17 @@ const SocialLogin = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Mock successful social login
-      localStorage.setItem('isAuthenticated', 'true');
+      dispatch(loginSuccess({
+        user: {
+          email: `user@${provider?.name?.toLowerCase()}.com`,
+          firstName: 'Social',
+          lastName: 'User',
+          id: 'social-123',
+          role: 'user'
+        },
+        token: 'mock-jwt-token-123'
+      }));
+
       localStorage.setItem('userEmail', `user@${provider?.name?.toLowerCase()}.com`);
       localStorage.setItem('loginProvider', provider?.name);
 
@@ -72,9 +85,9 @@ const SocialLogin = () => {
             className="justify-center"
           >
             <div className="flex items-center space-x-3">
-              <Icon 
-                name={provider?.icon} 
-                size={18} 
+              <Icon
+                name={provider?.icon}
+                size={18}
                 color={provider?.color}
               />
               <span>Continue with {provider?.name}</span>

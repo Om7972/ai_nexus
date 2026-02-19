@@ -10,15 +10,9 @@ const UserLogin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const isAuthenticated = localStorage.getItem('isAuthenticated');
-    if (isAuthenticated === 'true') {
-      navigate('/main-dashboard');
-    }
-
     // Set page title
     document.title = 'Sign In - AI Nexus';
-  }, [navigate]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -29,10 +23,10 @@ const UserLogin = () => {
           <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
             <div className="w-full max-w-md space-y-8">
               <LoginHeader />
-              
+
               <div className="bg-card rounded-2xl p-8 elevation-2">
                 <SocialLogin />
-                
+
                 <div className="mt-8">
                   <LoginForm />
                 </div>

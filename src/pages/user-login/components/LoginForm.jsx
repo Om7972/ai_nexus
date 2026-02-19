@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../../../store/slices/authSlice';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Checkbox } from '../../../components/ui/Checkbox';
@@ -7,6 +9,7 @@ import Icon from '../../../components/AppIcon';
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -26,13 +29,13 @@ const LoginForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData?.email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/?.test(formData?.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
+
     if (!formData?.password) {
       newErrors.password = 'Password is required';
     } else if (formData?.password?.length < 6) {
@@ -53,7 +56,7 @@ const LoginForm = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
+
     // Clear error when user starts typing
     if (errors?.[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -62,7 +65,7 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
@@ -93,7 +96,17 @@ const LoginForm = () => {
       }
 
       // Successful login
-      localStorage.setItem('isAuthenticated', 'true');
+      dispatch(loginSuccess({
+        user: {
+          email: formData?.email,
+          firstName: 'Admin',
+          lastName: 'User',
+          id: '1',
+          role: 'admin'
+        },
+        token: 'mock-jwt-token-123'
+      }));
+
       localStorage.setItem('userEmail', formData?.email);
       if (formData?.rememberMe) {
         localStorage.setItem('rememberMe', 'true');

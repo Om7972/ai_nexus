@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '../../store/slices/authSlice';
 import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
@@ -16,6 +18,7 @@ const UserRegistration = () => {
   const [userEmail, setUserEmail] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Mock user data for demonstration
   const mockUsers = [
@@ -27,13 +30,22 @@ const UserRegistration = () => {
   const handleSocialLogin = async (provider) => {
     setIsLoading(true);
     setError('');
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       // Mock social login success
-      console.log(`Social login with ${provider}`);
+      dispatch(loginSuccess({
+        user: {
+          email: `user@${provider?.toLowerCase()}.com`,
+          firstName: 'Social',
+          lastName: 'User',
+          id: 'social-123',
+          role: 'user'
+        },
+        token: 'mock-jwt-token-123'
+      }));
       navigate('/main-dashboard');
     } catch (err) {
       setError(`Failed to sign up with ${provider}. Please try again.`);
@@ -45,21 +57,21 @@ const UserRegistration = () => {
   const handleRegistration = async (formData) => {
     setIsLoading(true);
     setError('');
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Check if email already exists (mock validation)
       const existingUser = mockUsers?.find(user => user?.email?.toLowerCase() === formData?.email?.toLowerCase());
       if (existingUser) {
         throw new Error('An account with this email already exists. Please use a different email or sign in.');
       }
-      
+
       // Mock successful registration
       setUserEmail(formData?.email);
       setRegistrationSuccess(true);
-      
+
       // Add to mock users array
       mockUsers?.push({
         email: formData?.email,
@@ -67,13 +79,13 @@ const UserRegistration = () => {
         fullName: formData?.fullName,
         subscribeNewsletter: formData?.subscribeNewsletter
       });
-      
+
       console.log('Registration successful:', {
         email: formData?.email,
         fullName: formData?.fullName,
         subscribeNewsletter: formData?.subscribeNewsletter
       });
-      
+
     } catch (err) {
       setError(err?.message || 'Registration failed. Please try again.');
     } finally {
@@ -83,7 +95,7 @@ const UserRegistration = () => {
 
   const handleResendEmail = async () => {
     setIsResending(true);
-    
+
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -111,17 +123,17 @@ const UserRegistration = () => {
 
       <div className="min-h-screen bg-background">
         <Header />
-        
+
         <main className="pt-16 min-h-screen flex items-center justify-center px-4 py-8">
           <div className="w-full max-w-md">
             {registrationSuccess ? (
               <div className="glass-morphism rounded-2xl p-8 elevation-2">
-                <SuccessMessage 
+                <SuccessMessage
                   email={userEmail}
                   onResendEmail={handleResendEmail}
                   isResending={isResending}
                 />
-                
+
                 <div className="mt-8 pt-6 border-t border-border text-center">
                   <button
                     onClick={handleBackToRegistration}
@@ -162,14 +174,14 @@ const UserRegistration = () => {
                 )}
 
                 {/* Social Login */}
-                <SocialLoginButtons 
+                <SocialLoginButtons
                   onSocialLogin={handleSocialLogin}
                   isLoading={isLoading}
                 />
 
                 {/* Registration Form */}
                 <div className="mt-6">
-                  <RegistrationForm 
+                  <RegistrationForm
                     onSubmit={handleRegistration}
                     isLoading={isLoading}
                   />

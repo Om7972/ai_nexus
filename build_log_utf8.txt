@@ -1,0 +1,70 @@
+﻿
+> ai_nexus@1.0.0 build
+> vite build --sourcemap
+
+[36mvite v5.0.0 [32mbuilding for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 9 modules transformed.
+node.exe : 
+[31msrc/store/index.js 
+(24:7): Expected '{', got 
+'type'[39m
+At C:\Program 
+Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS 
+$args
++   
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          :  
+   NotSpecified: ([31msrc/st  
+  ore/...got 'type'[39m:Str   
+ ing) [], RemoteException
+    + FullyQualifiedErrorId :  
+   NativeCommandError
+ 
+file: [36mC:/Users/OM/OneDrive
+/Desktop/ai_nexus_by_rocket.new
+/src/store/index.js:24:7[39m
+[33m22: });
+23: 
+24: export type RootState = 
+ReturnType<typeof 
+store.getState>;
+           ^
+25: export type AppDispatch = 
+typeof store.dispatch; [39m
+[31merror during build:
+RollupError: 
+src/store/index.js (24:7): 
+Expected '{', got 'type'
+    at getRollupError (file:///
+C:/Users/OM/OneDrive/Desktop/ai
+_nexus_by_rocket.new/node_modul
+es/rollup/dist/es/shared/parseA
+st.js:401:41)
+    at ParseError.initialise (f
+ile:///C:/Users/OM/OneDrive/Des
+ktop/ai_nexus_by_rocket.new/nod
+e_modules/rollup/dist/es/shared
+/node-entry.js:14393:28)
+    at convertNode (file:///C:/
+Users/OM/OneDrive/Desktop/ai_ne
+xus_by_rocket.new/node_modules/
+rollup/dist/es/shared/node-entr
+y.js:16273:10)
+    at convertProgram (file:///
+C:/Users/OM/OneDrive/Desktop/ai
+_nexus_by_rocket.new/node_modul
+es/rollup/dist/es/shared/node-e
+ntry.js:15513:12)
+    at Module.setSource (file:/
+//C:/Users/OM/OneDrive/Desktop/
+ai_nexus_by_rocket.new/node_mod
+ules/rollup/dist/es/shared/node
+-entry.js:17268:24)
+    at async 
+ModuleLoader.addModuleSource (f
+ile:///C:/Users/OM/OneDrive/Des
+ktop/ai_nexus_by_rocket.new/nod
+e_modules/rollup/dist/es/shared
+/node-entry.js:21281:13)[39m
