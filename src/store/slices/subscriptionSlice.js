@@ -5,11 +5,40 @@ export const fetchSubscription = createAsyncThunk(
   'subscription/fetchSubscription',
   async (_, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      const response = await axios.get('/api/subscription', {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      });
-      return response.data;
+      // Mock successful response
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+      return {
+        currentPlan: {
+          id: 'pro',
+          name: 'Pro',
+          price: 29,
+          currency: 'USD',
+          interval: 'month',
+          features: [
+            'Advanced AI Analysis',
+            'Unlimited projects',
+            'Priority support',
+            'Custom models',
+            'Team collaboration'
+          ],
+          limits: {
+            projects: -1,
+            apiCalls: 1000,
+            storage: '10GB',
+            teamMembers: 5
+          }
+        },
+        status: 'active',
+        nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        paymentMethod: {
+          id: 'pm_mock_123',
+          type: 'card',
+          last4: '4242',
+          brand: 'visa',
+          expiryMonth: '12',
+          expiryYear: '2025'
+        }
+      };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch subscription');
     }

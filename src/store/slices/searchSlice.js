@@ -5,14 +5,25 @@ export const performSearch = createAsyncThunk(
   'search/performSearch',
   async (searchParams, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      const { query, filters, type } = searchParams;
-      
-      const response = await axios.get('/api/search', {
-        headers: { Authorization: `Bearer ${auth.token}` },
-        params: { query, filters, type }
-      });
-      return response.data;
+      // Mock successful response
+      await new Promise(resolve => setTimeout(resolve, 800));
+      return {
+        results: {
+          projects: [
+            { id: 1, title: 'AI Content Generator', type: 'project', updated: '2 days ago' },
+            { id: 2, title: 'Image Enhancement Task', type: 'project', updated: '1 week ago' }
+          ],
+          documents: [
+            { id: 101, title: 'Q3 Report', type: 'document', updated: 'Yesterday' }
+          ],
+          users: [],
+          templates: [],
+          analytics: []
+        },
+        totalResults: 3,
+        currentPage: 1,
+        hasMore: false
+      };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Search failed');
     }
@@ -147,13 +158,13 @@ const searchSlice = createSlice({
     addToRecentSearches: (state, action) => {
       const search = action.payload;
       const existingIndex = state.recentSearches.findIndex(s => s.query === search.query);
-      
+
       if (existingIndex !== -1) {
         state.recentSearches.splice(existingIndex, 1);
       }
-      
+
       state.recentSearches.unshift(search);
-      
+
       // Keep only last 10 searches
       if (state.recentSearches.length > 10) {
         state.recentSearches = state.recentSearches.slice(0, 10);
@@ -234,12 +245,12 @@ const searchSlice = createSlice({
   },
 });
 
-export const { 
-  clearError, 
-  setQuery, 
-  clearQuery, 
-  setFilters, 
-  clearFilters, 
+export const {
+  clearError,
+  setQuery,
+  clearQuery,
+  setFilters,
+  clearFilters,
   clearResults,
   clearSuggestions,
   addToRecentSearches,

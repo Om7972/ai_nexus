@@ -4,6 +4,7 @@ import Header from '../../components/ui/Header';
 import Sidebar from '../../components/ui/Sidebar';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
+import { generateText } from '../../services/gemini';
 
 // Import components
 import ModelSelector from './components/ModelSelector';
@@ -21,7 +22,7 @@ const AITextGenerationStudio = () => {
   const [activeRightTab, setActiveRightTab] = useState('history');
 
   // Generation state
-  const [selectedModel, setSelectedModel] = useState('gpt-4-turbo');
+  const [selectedModel, setSelectedModel] = useState('gemini-pro');
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [prompt, setPrompt] = useState('');
   const [generatedContent, setGeneratedContent] = useState('');
@@ -75,33 +76,60 @@ const AITextGenerationStudio = () => {
 
   const handleGenerate = async () => {
     if (!prompt?.trim()) return;
-    
+
     setIsGenerating(true);
     try {
-      // Simulate AI generation
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Mock generated content based on template and parameters
-      const mockContent = generateMockContent(selectedTemplate, prompt, parameters);
-      setGeneratedContent(mockContent);
+      // Map UI parameters to Gemini generation config
+      const options = {
+        temperature: parameters.creativity, // 0.0 to 1.0
+        // Map other parameters if needed, or include them in the prompt context
+      };
+
+      // Enhance prompt with context based on parameters (tone, format, etc.)
+      const enhancedPrompt = `
+        Context: You are an AI writing assistant.
+        Tone: ${parameters.tone}
+        Format: ${parameters.format}
+        Target Length: ${parameters.length}
+        Language: ${parameters.language}
+        
+        Task: ${prompt}
+        
+        Instructions: Generate high-quality content following the specified tone and format.
+      `.trim();
+
+      const text = await generateText(enhancedPrompt, options);
+      setGeneratedContent(text);
+
+    } catch (error) {
+      console.error("Generation failed:", error);
+      // Fallback to mock content if API fails (or just show error)
+      // For now, let's show an error placeholder or keep the old mock as fallback?
+      // User wants real generation. Let's show error to debug if it fails.
+      setGeneratedContent(`Error: Failed to generate content. Please check your API key and try again.\nDetails: ${error.message}`);
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleRegenerate = () => {
-    handleGenerate();
-  };
-
   const handleRefine = async () => {
     if (!generatedContent) return;
-    
+
     setIsGenerating(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      // Mock refined content
-      const refinedContent = generatedContent + '\n\n[Refined section with additional insights and improved clarity based on your feedback.]';
-      setGeneratedContent(refinedContent);
+      const refinementPrompt = `
+        Original Content: """${generatedContent}"""
+        
+        Task: Refine and improve the above content.
+        Focus: Better clarity, flow, and impact.
+        Tone: ${parameters.tone}
+      `.trim();
+
+      const text = await generateText(refinementPrompt, { temperature: 0.7 });
+      setGeneratedContent(text);
+    } catch (error) {
+      console.error("Refinement failed:", error);
+      setGeneratedContent(prev => prev + `\n\n[Error: Failed to refine content. Details: ${error.message}]`);
     } finally {
       setIsGenerating(false);
     }
@@ -183,7 +211,7 @@ Click the button below to schedule your personalized demo and see how our platfo
 Best regards,
 The AI Nexus Team
 
-P.S. Don't miss out on this exclusive opportunity. Our early access program has limited spots available.`,'social-media': `🚀 Exciting news! We're launching something incredible that will change how you work with AI. Imagine having a personal AI assistant that understands your needs, learns from your preferences, and delivers exactly what you're looking for – every single time.
+P.S. Don't miss out on this exclusive opportunity. Our early access program has limited spots available.`, 'social-media': `🚀 Exciting news! We're launching something incredible that will change how you work with AI. Imagine having a personal AI assistant that understands your needs, learns from your preferences, and delivers exactly what you're looking for – every single time.
 
 ✨ What makes this special:
 • Intuitive interface that feels natural
@@ -264,19 +292,17 @@ This content is ready for use and can be further customized based on your specif
       </Helmet>
       <div className="min-h-screen bg-background">
         <Header />
-        <Sidebar 
-          isCollapsed={sidebarCollapsed} 
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        <Sidebar
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
 
-        <main className={`pt-16 transition-all duration-300 ${
-          sidebarCollapsed ? 'ml-16' : 'ml-64'
-        }`}>
+        <main className={`pt-16 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'
+          }`}>
           <div className="h-[calc(100vh-4rem)] flex">
             {/* Left Panel */}
-            <div className={`transition-all duration-300 border-r border-border bg-background ${
-              leftPanelCollapsed ? 'w-12' : 'w-80'
-            }`}>
+            <div className={`transition-all duration-300 border-r border-border bg-background ${leftPanelCollapsed ? 'w-12' : 'w-80'
+              }`}>
               <div className="h-full flex flex-col">
                 {/* Left Panel Header */}
                 <div className="flex items-center justify-between p-4 border-b border-border">
@@ -286,11 +312,10 @@ This content is ready for use and can be further customized based on your specif
                         <button
                           key={tab?.id}
                           onClick={() => setActiveLeftTab(tab?.id)}
-                          className={`flex items-center space-x-2 px-3 py-2 text-xs font-medium rounded-md spring-animation ${
-                            activeLeftTab === tab?.id
-                              ? 'bg-background text-foreground shadow-sm'
-                              : 'text-muted-foreground hover:text-foreground'
-                          }`}
+                          className={`flex items-center space-x-2 px-3 py-2 text-xs font-medium rounded-md spring-animation ${activeLeftTab === tab?.id
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
                         >
                           <Icon name={tab?.icon} size={14} />
                           <span>{tab?.label}</span>
@@ -370,9 +395,8 @@ This content is ready for use and can be further customized based on your specif
             </div>
 
             {/* Right Panel */}
-            <div className={`transition-all duration-300 border-l border-border bg-background ${
-              rightPanelCollapsed ? 'w-12' : 'w-80'
-            }`}>
+            <div className={`transition-all duration-300 border-l border-border bg-background ${rightPanelCollapsed ? 'w-12' : 'w-80'
+              }`}>
               <div className="h-full flex flex-col">
                 {/* Right Panel Header */}
                 <div className="flex items-center justify-between p-4 border-b border-border">
@@ -389,11 +413,10 @@ This content is ready for use and can be further customized based on your specif
                         <button
                           key={tab?.id}
                           onClick={() => setActiveRightTab(tab?.id)}
-                          className={`flex items-center space-x-2 px-3 py-2 text-xs font-medium rounded-md spring-animation ${
-                            activeRightTab === tab?.id
-                              ? 'bg-background text-foreground shadow-sm'
-                              : 'text-muted-foreground hover:text-foreground'
-                          }`}
+                          className={`flex items-center space-x-2 px-3 py-2 text-xs font-medium rounded-md spring-animation ${activeRightTab === tab?.id
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
                         >
                           <Icon name={tab?.icon} size={14} />
                           <span>{tab?.label}</span>

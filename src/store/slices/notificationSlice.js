@@ -5,11 +5,20 @@ export const fetchNotifications = createAsyncThunk(
   'notifications/fetchNotifications',
   async (_, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      const response = await axios.get('/api/notifications', {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      });
-      return response.data;
+      // Mock successful response
+      await new Promise(resolve => setTimeout(resolve, 600));
+      return {
+        notifications: [
+          { id: 1, title: 'Welcome to AI Nexus', message: 'Get started by creating your first project.', read: false, date: new Date().toISOString() },
+          { id: 2, title: 'New Feature Alert', message: 'Try out our new Gemini-powered Text Studio!', read: false, date: new Date(Date.now() - 86400000).toISOString() }
+        ],
+        unreadCount: 2,
+        settings: {
+          email: { enabled: true, types: { projectUpdates: true, systemAlerts: true } },
+          push: { enabled: true, types: { projectUpdates: true } },
+          inApp: { enabled: true, types: { projectUpdates: true, systemAlerts: true } }
+        }
+      };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch notifications');
     }
@@ -213,11 +222,11 @@ const notificationSlice = createSlice({
   },
 });
 
-export const { 
-  clearError, 
-  addNotification, 
-  removeNotification, 
-  markAsRead, 
+export const {
+  clearError,
+  addNotification,
+  removeNotification,
+  markAsRead,
   markAllAsRead,
   updateUnreadCount,
   toggleNotificationType,

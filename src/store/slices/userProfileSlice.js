@@ -5,11 +5,33 @@ export const fetchUserProfile = createAsyncThunk(
   'userProfile/fetchUserProfile',
   async (_, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      const response = await axios.get('/api/user/profile', {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      });
-      return response.data;
+      // Mock successful response
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return {
+        profile: {
+          id: '1',
+          firstName: 'Admin',
+          lastName: 'User',
+          email: 'admin@ainexus.com',
+          role: 'admin',
+          avatar: '',
+          bio: 'AI Enthusiast & Developer',
+          location: 'San Francisco, CA',
+          website: 'https://ainexus.com',
+          phone: '(555) 123-4567',
+          occupation: 'Senior Developer',
+          company: 'AI Nexus Inc.',
+          skills: ['React', 'Node.js', 'AI/ML', 'Python'],
+          interests: ['Robotics', 'Generative AI', 'Space Exploration']
+        },
+        preferences: {
+          theme: 'dark',
+          language: 'en',
+          timezone: 'America/Los_Angeles',
+          emailNotifications: true,
+          pushNotifications: true
+        }
+      };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch profile');
     }
@@ -53,9 +75,9 @@ export const uploadProfileImage = createAsyncThunk(
       const { auth } = getState();
       const formData = new FormData();
       formData.append('profileImage', imageFile);
-      
+
       const response = await axios.post('/api/user/profile-image', formData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${auth.token}`,
           'Content-Type': 'multipart/form-data'
         }
@@ -204,13 +226,13 @@ const userProfileSlice = createSlice({
   },
 });
 
-export const { 
-  clearError, 
-  setTheme, 
-  setLanguage, 
-  toggleNotification, 
+export const {
+  clearError,
+  setTheme,
+  setLanguage,
+  toggleNotification,
   updatePrivacySetting,
-  updateAIPreference 
+  updateAIPreference
 } = userProfileSlice.actions;
 
 export default userProfileSlice.reducer; 

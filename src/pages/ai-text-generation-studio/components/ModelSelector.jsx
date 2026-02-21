@@ -6,41 +6,33 @@ const ModelSelector = ({ selectedModel, onModelChange, isGenerating }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const models = [
-    { 
-      value: 'gpt-4-turbo', 
-      label: 'GPT-4 Turbo',
-      description: 'Most capable model for complex tasks'
+    {
+      value: 'gemini-pro',
+      label: 'Gemini Pro',
+      description: 'Google\'s advanced language model'
     },
-    { 
-      value: 'gpt-4', 
-      label: 'GPT-4',
-      description: 'High-quality text generation'
+    {
+      value: 'gemini-1.5-flash',
+      label: 'Gemini 1.5 Flash',
+      description: 'Fast and efficient multimodal model'
     },
-    { 
-      value: 'gpt-3.5-turbo', 
-      label: 'GPT-3.5 Turbo',
-      description: 'Fast and efficient for most tasks'
+    {
+      value: 'gpt-4-turbo',
+      label: 'GPT-4 Turbo (coming soon)',
+      description: 'Most capable model for complex tasks',
+      disabled: true
     },
-    { 
-      value: 'claude-3-opus', 
-      label: 'Claude 3 Opus',
-      description: 'Excellent for creative writing'
-    },
-    { 
-      value: 'claude-3-sonnet', 
-      label: 'Claude 3 Sonnet',
-      description: 'Balanced performance and speed'
+    {
+      value: 'gpt-3.5-turbo',
+      label: 'GPT-3.5 Turbo (coming soon)',
+      description: 'Fast and efficient for most tasks',
+      disabled: true
     }
   ];
 
   const advancedModels = [
-    { 
-      value: 'gemini-pro', 
-      label: 'Gemini Pro',
-      description: 'Google\'s advanced language model'
-    },
-    { 
-      value: 'llama-2-70b', 
+    {
+      value: 'llama-2-70b',
       label: 'Llama 2 70B',
       description: 'Open-source alternative'
     }
