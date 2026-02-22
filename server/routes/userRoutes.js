@@ -1,32 +1,26 @@
+/**
+ * userRoutes.js  –  /api/v1/users
+ */
 import { Router } from 'express';
-import * as userController from '../controllers/userController.js';
-import { protect, restrictTo } from '../middlewares/authMiddleware.js';
+import { protect, isAdmin } from '../middlewares/authMiddleware.js';
+import * as ctrl from '../controllers/userController.js';
 
 const router = Router();
 
-// All user routes require authentication
+// All user routes require a valid JWT
 router.use(protect);
 
-// ── Self-service routes ───────────────────────────────────────────────────────
+// ── Self-service ──────────────────────────────────────────────────────────────
+router.get('/me', ctrl.getMe);
+router.patch('/me', ctrl.updateMe);
+router.delete('/me', ctrl.deleteMe);
+router.get('/me/activity', ctrl.getUserActivity);
 
-/** @route  GET   /api/v1/users/me */
-router.get('/me', userController.getMyProfile);
-
-/** @route  PATCH /api/v1/users/me */
-router.patch('/me', userController.updateMyProfile);
-
-// ── Admin-only routes ─────────────────────────────────────────────────────────
-
-/** @route  GET   /api/v1/users */
-router.get('/', restrictTo('admin'), userController.getAllUsers);
-
-/** @route  GET   /api/v1/users/:id */
-router.get('/:id', restrictTo('admin'), userController.getUser);
-
-/** @route  PATCH /api/v1/users/:id */
-router.patch('/:id', restrictTo('admin'), userController.updateUser);
-
-/** @route  DELETE /api/v1/users/:id */
-router.delete('/:id', restrictTo('admin'), userController.deleteUser);
+// ── Admin-only ────────────────────────────────────────────────────────────────
+router.get('/', isAdmin, ctrl.listUsers);
+router.get('/:id', isAdmin, ctrl.getUserById);
+router.patch('/:id', isAdmin, ctrl.updateUser);
+router.delete('/:id', isAdmin, ctrl.deleteUser);
+router.get('/:id/activity', isAdmin, ctrl.getUserActivity);
 
 export default router;

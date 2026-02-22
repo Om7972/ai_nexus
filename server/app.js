@@ -13,6 +13,9 @@ import AppError from './utils/AppError.js';
 // ── Route imports ─────────────────────────────────────────────────────────────
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import projectRoutes from './routes/projectRoutes.js';
+import aiModelRoutes from './routes/aiModelRoutes.js';
+import workspaceRoutes from './routes/workspaceRoutes.js';
 
 // ── App initialization ────────────────────────────────────────────────────────
 const app = express();
@@ -104,6 +107,9 @@ app.get('/api/v1/health', (req, res) => {
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/projects', projectRoutes);
+app.use('/api/v1/models', aiModelRoutes);
+app.use('/api/v1/workspaces', workspaceRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 8. 404 HANDLER  (must be after all routes)
