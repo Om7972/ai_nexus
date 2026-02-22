@@ -43,6 +43,49 @@ const userSchema = new Schema(
             default: '',
         },
 
+        // ── Extended profile ───────────────────────────────────────────────────
+        bio: {
+            type: String,
+            trim: true,
+            maxlength: [300, 'Bio cannot exceed 300 characters'],
+            default: '',
+        },
+
+        location: {
+            type: String,
+            trim: true,
+            maxlength: [100, 'Location cannot exceed 100 characters'],
+            default: '',
+        },
+
+        website: {
+            type: String,
+            trim: true,
+            match: [/^https?:\/\/.+/, 'Website must be a valid URL'],
+            default: '',
+        },
+
+        social: {
+            github: { type: String, trim: true, default: '' },
+            twitter: { type: String, trim: true, default: '' },
+            linkedin: { type: String, trim: true, default: '' },
+        },
+
+        // ── Plan / Subscription ────────────────────────────────────────────────
+        plan: {
+            type: String,
+            enum: ['free', 'pro', 'enterprise'],
+            default: 'free',
+            index: true,
+        },
+
+        // ── Usage counters ────────────────────────────────────────────────────
+        usage: {
+            aiRequestsToday: { type: Number, default: 0, min: 0 },
+            aiRequestsTotal: { type: Number, default: 0, min: 0 },
+            lastRequestAt: { type: Date, default: null },
+        },
+
         // ── Email verification ────────────────────────────────────────────────────
         isEmailVerified: {
             type: Boolean,
@@ -91,8 +134,39 @@ const userSchema = new Schema(
     {
         timestamps: true,
         versionKey: false,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true },
     }
 );
+
+// ── Virtual back-references ───────────────────────────────────────────────────
+
+/** Workspaces this user belongs to (populated via Workspace.members) */
+userSchema.virtual('workspaces', {
+    ref: 'Workspace',
+    localField: '_id',
+    foreignField: 'members.user',
+    match: { deletedAt: null },
+});
+
+/** Projects this user created */
+userSchema.virtual('projects', {
+    ref: 'Project',
+    localField: '_id',
+    foreignField: 'createdBy',
+    match: { deletedAt: null },
+    options: { sort: { updatedAt: -1 } },
+});
+
+/** Full display name virtual */
+userSchema.virtual('initials').get(function () {
+    return this.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+});
 
 // ── Pre-save: hash password ───────────────────────────────────────────────────
 userSchema.pre('save', async function (next) {
@@ -162,9 +236,9 @@ userSchema.methods.createEmailVerificationToken = function () {
     return rawToken;
 };
 
-/** Strip all sensitive fields before serialising. */
+/** Strip all sensitive fields before serialising (for API responses to the owner). */
 userSchema.methods.toSafeObject = function () {
-    const obj = this.toObject();
+    const obj = this.toObject({ virtuals: true });
     delete obj.password;
     delete obj.refreshToken;
     delete obj.passwordResetToken;
@@ -176,5 +250,26 @@ userSchema.methods.toSafeObject = function () {
     return obj;
 };
 
+/**
+ * Safe serialisation for PUBLIC profile views.
+ * Exposes only non-sensitive fields.
+ */
+userSchema.methods.toPublicObject = function () {
+    return {
+        _id: this._id,
+        name: this.name,
+        avatar: this.avatar,
+        bio: this.bio,
+        location: this.location,
+        website: this.website,
+        social: this.social,
+        plan: this.plan,
+        role: this.role,
+        initials: this.initials,
+        createdAt: this.createdAt,
+    };
+};
+
 const User = model('User', userSchema);
 export default User;
+
