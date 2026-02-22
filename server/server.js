@@ -11,10 +11,16 @@
 // ── Load env FIRST before any other imports ───────────────────────────────────
 import 'dotenv/config';
 
+// ── Validate ALL env vars before anything else runs ───────────────────────────
+// Hard-exits with a descriptive error if any required variable is missing.
+import validateEnv from './config/env.js';
+validateEnv();
+
 import app from './app.js';
 import connectDB from './config/db.js';
 import config from './config/config.js';
 import logger from './utils/logger.js';
+
 
 // ── Handle synchronous uncaught exceptions ────────────────────────────────────
 process.on('uncaughtException', (err) => {

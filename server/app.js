@@ -1,11 +1,17 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import cookieParser from 'cookie-parser';
-import mongoSanitize from 'express-mongo-sanitize';
+/**
+ * app.js  –  Express application factory.
+ *
+ * Security middleware is applied via applySecurityMiddleware() which handles:
+ *   Helmet · CORS · Rate limiting · Body parsing
+ *   MongoSanitize · XSS-clean · CSRF protection
+ *
+ * Routes are mounted after security middleware.
+ * The global error handler is always last.
+ */
 
-import config from './config/config.js';
+import express from 'express';
+
+import { applySecurityMiddleware, generateCsrfToken } from './config/security.js';
 import requestLogger from './middlewares/requestLogger.js';
 import errorHandler from './middlewares/errorHandler.js';
 import AppError from './utils/AppError.js';
@@ -20,91 +26,43 @@ import workspaceRoutes from './routes/workspaceRoutes.js';
 // ── App initialization ────────────────────────────────────────────────────────
 const app = express();
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. SECURITY HEADERS  (Helmet)
-// ─────────────────────────────────────────────────────────────────────────────
-app.use(
-    helmet({
-        crossOriginResourcePolicy: { policy: 'cross-origin' },
-        contentSecurityPolicy: config.env === 'production', // enabled only in prod
-    })
-);
+// Trust first proxy (required for rate-limit IP detection behind nginx/load-balancers)
+app.set('trust proxy', 1);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. CORS
+// 1. SECURITY  (Helmet · CORS · Rate-limit · Body-parse · Sanitize · XSS · CSRF)
 // ─────────────────────────────────────────────────────────────────────────────
-app.use(
-    cors({
-        origin: config.cors.origin,
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'],
-        credentials: true, // allows cookies / auth headers from the browser
-    })
-);
-
-// Pre-flight requests
-app.options('*', cors());
+applySecurityMiddleware(app);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. RATE LIMITER
-// ─────────────────────────────────────────────────────────────────────────────
-const limiter = rateLimit({
-    windowMs: config.rateLimit.windowMs, // default: 15 min
-    max: config.rateLimit.max,           // default: 100 req / window
-    standardHeaders: true,               // Return rate limit info in `RateLimit-*` headers
-    legacyHeaders: false,
-    message: {
-        success: false,
-        message: 'Too many requests from this IP. Please try again later.',
-    },
-});
-
-app.use('/api', limiter);
-
-// Stricter limit on auth endpoints to protect against brute-force
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 min
-    max: 10,
-    message: {
-        success: false,
-        message: 'Too many login attempts. Please try again in 15 minutes.',
-    },
-});
-
-app.use('/api/v1/auth/login', authLimiter);
-app.use('/api/v1/auth/register', authLimiter);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 4. BODY PARSING
-// ─────────────────────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '10kb' }));           // reject huge payloads
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-app.use(cookieParser());
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 5. DATA SANITIZATION  (NoSQL injection guard)
-// ─────────────────────────────────────────────────────────────────────────────
-app.use(mongoSanitize());
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 6. REQUEST LOGGER
+// 2. REQUEST LOGGER
 // ─────────────────────────────────────────────────────────────────────────────
 app.use(requestLogger);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. ROUTES
+// 3. ROUTES
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Health-check – no auth required
-app.get('/api/v1/health', (req, res) => {
+// ── Health-check – no auth required ──────────────────────────────────────────
+app.get('/api/v1/health', (_req, res) => {
     res.status(200).json({
         success: true,
         message: '✅ AI-Nexus API is healthy',
         timestamp: new Date().toISOString(),
-        environment: config.env,
+        environment: process.env.NODE_ENV,
     });
 });
 
+// ── CSRF token endpoint ───────────────────────────────────────────────────────
+// Browser clients MUST call this before any mutating request.
+// Returns the token in the response body AND sets the __Host-csrf cookie.
+// REST clients using Bearer tokens don't need this endpoint.
+app.get('/api/v1/auth/csrf-token', (req, res) => {
+    const token = generateCsrfToken(req, res);
+    res.json({ success: true, csrfToken: token });
+});
+
+// ── API routes ────────────────────────────────────────────────────────────────
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/projects', projectRoutes);
@@ -112,14 +70,14 @@ app.use('/api/v1/models', aiModelRoutes);
 app.use('/api/v1/workspaces', workspaceRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. 404 HANDLER  (must be after all routes)
+// 4. 404 HANDLER  (catch-all – must be after all routes)
 // ─────────────────────────────────────────────────────────────────────────────
-app.all('*', (req, res, next) => {
+app.all('*', (req, _res, next) => {
     next(new AppError(`Route ${req.method} ${req.originalUrl} not found.`, 404));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9. GLOBAL ERROR HANDLER  (must be last)
+// 5. GLOBAL ERROR HANDLER  (must be last – 4-argument signature)
 // ─────────────────────────────────────────────────────────────────────────────
 app.use(errorHandler);
 

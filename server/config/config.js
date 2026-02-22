@@ -1,40 +1,54 @@
 /**
- * Central configuration object.
- * Reads from process.env (loaded by dotenv in server.js).
+ * config.js  –  Central configuration object.
+ *
+ * Reads from the VALIDATED env object (via config/env.js).
+ * All values here are guaranteed to be correctly typed and present.
  */
-const config = {
-    env: process.env.NODE_ENV || 'development',
-    port: parseInt(process.env.PORT, 10) || 5000,
+import { env } from './env.js';
 
-    mongo: {
-        uri: process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/ai_nexus',
-    },
+const buildConfig = () => {
+    const e = env();
+    return {
+        env: e.NODE_ENV,
+        port: e.PORT,
 
-    jwt: {
-        secret: process.env.JWT_SECRET || 'changeme_access_secret',
-        expiresIn: process.env.JWT_EXPIRES_IN || '15m',
-        refreshSecret: process.env.JWT_REFRESH_SECRET || 'changeme_refresh_secret',
-        refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-    },
+        mongo: { uri: e.MONGO_URI },
 
-    cors: {
-        origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-    },
+        jwt: {
+            secret: e.JWT_SECRET,
+            expiresIn: e.JWT_EXPIRES_IN,
+            refreshSecret: e.JWT_REFRESH_SECRET,
+            refreshExpiresIn: e.JWT_REFRESH_EXPIRES_IN,
+        },
 
-    rateLimit: {
-        windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
-        max: parseInt(process.env.RATE_LIMIT_MAX, 10) || 100,
-    },
+        cors: { origin: e.CLIENT_ORIGIN },
+        clientUrl: e.CLIENT_ORIGIN,
 
-    email: {
-        host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-        port: parseInt(process.env.SMTP_PORT, 10) || 587,
-        user: process.env.SMTP_USER || '',
-        pass: process.env.SMTP_PASS || '',
-        from: process.env.EMAIL_FROM || 'AI-Nexus <noreply@ainexus.dev>',
-    },
+        rateLimit: {
+            windowMs: e.RATE_LIMIT_WINDOW_MS,
+            max: e.RATE_LIMIT_MAX,
+        },
 
-    clientUrl: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+        email: {
+            host: e.SMTP_HOST,
+            port: e.SMTP_PORT,
+            user: e.SMTP_USER,
+            pass: e.SMTP_PASS,
+            from: e.EMAIL_FROM,
+        },
+
+        csrf: { secret: e.CSRF_SECRET },
+        cookies: { secret: e.COOKIE_SECRET },
+    };
 };
+
+// Lazy-initialise so validateEnv() must be called before this module is used
+let _config = null;
+const config = new Proxy({}, {
+    get(_target, prop) {
+        if (!_config) _config = buildConfig();
+        return _config[prop];
+    },
+});
 
 export default config;
