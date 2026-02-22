@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { loginSuccess } from '../../store/slices/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { registerUser, clearError } from '../../store/slices/authSlice';
 import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
@@ -12,112 +12,92 @@ import LoginRedirect from './components/LoginRedirect';
 import SuccessMessage from './components/SuccessMessage';
 
 const UserRegistration = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isResending, setIsResending] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { loading, error, isAuthenticated, message } = useSelector((state) => state.auth);
+
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [userEmail, setUserEmail] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const [localError, setLocalError] = useState('');
 
-  // Mock user data for demonstration
-  const mockUsers = [
-    { email: 'john.doe@example.com', password: 'SecurePass123!' },
-    { email: 'jane.smith@company.com', password: 'MyPassword456@' },
-    { email: 'admin@ainexus.com', password: 'AdminPass789#' }
-  ];
+  // ── If registration auto-logged in the user, go straight to dashboard ──────
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/main-dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
+  // ── Sync Redux errors to local state ─────────────────────────────────────
+  useEffect(() => {
+    if (error) setLocalError(error);
+  }, [error]);
+
+  // ── Cleanup on unmount ────────────────────────────────────────────────────
+  useEffect(() => {
+    return () => dispatch(clearError());
+  }, [dispatch]);
+
+  // ── Social login (kept as stub – replace with OAuth provider) ────────────
   const handleSocialLogin = async (provider) => {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Mock social login success
-      dispatch(loginSuccess({
-        user: {
-          email: `user@${provider?.toLowerCase()}.com`,
-          firstName: 'Social',
-          lastName: 'User',
-          id: 'social-123',
-          role: 'user'
-        },
-        token: 'mock-jwt-token-123'
-      }));
-      navigate('/main-dashboard');
-    } catch (err) {
-      setError(`Failed to sign up with ${provider}. Please try again.`);
-    } finally {
-      setIsLoading(false);
-    }
+    setLocalError(`Social login with ${provider} is not yet configured.`);
   };
 
+  // ── Main registration handler ─────────────────────────────────────────────
   const handleRegistration = async (formData) => {
-    setIsLoading(true);
-    setError('');
+    setLocalError('');
+    dispatch(clearError());
 
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    const result = await dispatch(
+      registerUser({
+        name: formData.fullName,
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword || formData.password,
+      })
+    );
 
-      // Check if email already exists (mock validation)
-      const existingUser = mockUsers?.find(user => user?.email?.toLowerCase() === formData?.email?.toLowerCase());
-      if (existingUser) {
-        throw new Error('An account with this email already exists. Please use a different email or sign in.');
+    if (registerUser.fulfilled.match(result)) {
+      // isAuthenticated effect above will handle redirect.
+      // If server requires email verification (returns no accessToken), show success screen.
+      if (!result.payload?.accessToken) {
+        setUserEmail(formData.email);
+        setRegistrationSuccess(true);
       }
-
-      // Mock successful registration
-      setUserEmail(formData?.email);
-      setRegistrationSuccess(true);
-
-      // Add to mock users array
-      mockUsers?.push({
-        email: formData?.email,
-        password: formData?.password,
-        fullName: formData?.fullName,
-        subscribeNewsletter: formData?.subscribeNewsletter
-      });
-
-      console.log('Registration successful:', {
-        email: formData?.email,
-        fullName: formData?.fullName,
-        subscribeNewsletter: formData?.subscribeNewsletter
-      });
-
-    } catch (err) {
-      setError(err?.message || 'Registration failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+      // If accessToken present → isAuthenticated becomes true → useEffect navigates away
+    } else {
+      setLocalError(result.payload || 'Registration failed. Please try again.');
     }
   };
 
+  // ── Resend verification email ─────────────────────────────────────────────
   const handleResendEmail = async () => {
-    setIsResending(true);
-
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Verification email resent to:', userEmail);
-    } catch (err) {
-      setError('Failed to resend email. Please try again.');
-    } finally {
-      setIsResending(false);
+      const { default: axios } = await import('axios');
+      await axios.post('/api/v1/auth/resend-verification', {}, { withCredentials: true });
+    } catch {
+      setLocalError('Failed to resend verification email. Please try again.');
     }
   };
 
   const handleBackToRegistration = () => {
     setRegistrationSuccess(false);
     setUserEmail('');
-    setError('');
+    setLocalError('');
+    dispatch(clearError());
   };
+
+  const displayError = localError || error;
 
   return (
     <>
       <Helmet>
         <title>Sign Up - AI Nexus | Create Your AI-Powered Account</title>
-        <meta name="description" content="Join AI Nexus today and unlock powerful AI tools for text generation, image processing, and data analysis. Create your free account in minutes." />
+        <meta
+          name="description"
+          content="Join AI Nexus today and unlock powerful AI tools for text generation, image processing, and data analysis. Create your free account in minutes."
+        />
         <meta name="keywords" content="AI registration, sign up, AI platform, artificial intelligence, create account" />
       </Helmet>
 
@@ -131,9 +111,8 @@ const UserRegistration = () => {
                 <SuccessMessage
                   email={userEmail}
                   onResendEmail={handleResendEmail}
-                  isResending={isResending}
+                  isResending={loading}
                 />
-
                 <div className="mt-8 pt-6 border-t border-border text-center">
                   <button
                     onClick={handleBackToRegistration}
@@ -161,30 +140,24 @@ const UserRegistration = () => {
                 </div>
 
                 {/* Error Message */}
-                {error && (
+                {displayError && (
                   <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                     <div className="flex items-start space-x-3">
                       <Icon name="AlertCircle" size={20} color="#EF4444" className="mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-red-800">Registration Error</p>
-                        <p className="text-sm text-red-600 mt-1">{error}</p>
+                        <p className="text-sm text-red-600 mt-1">{displayError}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Social Login */}
-                <SocialLoginButtons
-                  onSocialLogin={handleSocialLogin}
-                  isLoading={isLoading}
-                />
+                <SocialLoginButtons onSocialLogin={handleSocialLogin} isLoading={loading} />
 
                 {/* Registration Form */}
                 <div className="mt-6">
-                  <RegistrationForm
-                    onSubmit={handleRegistration}
-                    isLoading={isLoading}
-                  />
+                  <RegistrationForm onSubmit={handleRegistration} isLoading={loading} />
                 </div>
 
                 {/* Terms and Privacy */}

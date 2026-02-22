@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { loginSuccess } from '../../../store/slices/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser, clearError } from '../../../store/slices/authSlice';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Checkbox } from '../../../components/ui/Checkbox';
@@ -10,206 +10,137 @@ import Icon from '../../../components/AppIcon';
 const LoginForm = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    rememberMe: false
-  });
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [showMFA, setShowMFA] = useState(false);
-  const [mfaCode, setMfaCode] = useState('');
 
-  // Mock credentials for authentication
-  const mockCredentials = {
-    email: 'admin@ainexus.com',
-    password: 'Admin123!',
-    mfaCode: '123456'
-  };
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
 
-  const validateForm = () => {
-    const newErrors = {};
+  const [formData, setFormData] = useState({ email: '', password: '', rememberMe: false });
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [generalError, setGeneralError] = useState('');
 
-    if (!formData?.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/?.test(formData?.email)) {
-      newErrors.email = 'Please enter a valid email address';
+  // ── Redirect once authenticated ───────────────────────────────────────────
+  useEffect(() => {
+    if (isAuthenticated) {
+      const redirect = sessionStorage.getItem('redirectAfterLogin') || '/main-dashboard';
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirect, { replace: true });
     }
+  }, [isAuthenticated, navigate]);
 
-    if (!formData?.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData?.password?.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
+  // ── Sync Redux errors ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (error) setGeneralError(error);
+  }, [error]);
 
-    if (showMFA && !mfaCode) {
-      newErrors.mfaCode = 'Verification code is required';
-    }
+  useEffect(() => {
+    return () => dispatch(clearError());
+  }, [dispatch]);
 
-    setErrors(newErrors);
-    return Object.keys(newErrors)?.length === 0;
+  // ── Validation ────────────────────────────────────────────────────────────
+  const validate = () => {
+    const errs = {};
+    if (!formData.email) errs.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) errs.email = 'Enter a valid email';
+    if (!formData.password) errs.password = 'Password is required';
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e?.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-
-    // Clear error when user starts typing
-    if (errors?.[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    if (fieldErrors[name]) setFieldErrors((prev) => ({ ...prev, [name]: '' }));
+    if (generalError) setGeneralError('');
+    dispatch(clearError());
   };
 
+  // ── Submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
-    e?.preventDefault();
+    e.preventDefault();
+    if (!validate()) return;
 
-    if (!validateForm()) return;
+    setGeneralError('');
+    const result = await dispatch(loginUser({ email: formData.email, password: formData.password }));
 
-    setIsLoading(true);
-
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Check credentials
-      if (formData?.email !== mockCredentials?.email || formData?.password !== mockCredentials?.password) {
-        setErrors({ general: 'Invalid email or password. Please try again.' });
-        setIsLoading(false);
-        return;
-      }
-
-      // Show MFA if not already shown
-      if (!showMFA) {
-        setShowMFA(true);
-        setIsLoading(false);
-        return;
-      }
-
-      // Validate MFA code
-      if (mfaCode !== mockCredentials?.mfaCode) {
-        setErrors({ mfaCode: 'Invalid verification code. Please try again.' });
-        setIsLoading(false);
-        return;
-      }
-
-      // Successful login
-      dispatch(loginSuccess({
-        user: {
-          email: formData?.email,
-          firstName: 'Admin',
-          lastName: 'User',
-          id: '1',
-          role: 'admin'
-        },
-        token: 'mock-jwt-token-123'
-      }));
-
-      localStorage.setItem('userEmail', formData?.email);
-      if (formData?.rememberMe) {
-        localStorage.setItem('rememberMe', 'true');
-      }
-
-      navigate('/main-dashboard');
-    } catch (error) {
-      setErrors({ general: 'An error occurred. Please try again.' });
-    } finally {
-      setIsLoading(false);
+    if (loginUser.rejected.match(result)) {
+      setGeneralError(result.payload || 'Login failed. Please try again.');
     }
+    // On success, the isAuthenticated useEffect above handles navigation
   };
 
   const handleForgotPassword = () => {
-    // In a real app, this would trigger password reset flow
-    alert('Password reset link would be sent to your email address.');
+    navigate('/forgot-password');
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {errors?.general && (
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+      {/* General error */}
+      {generalError && (
         <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
           <div className="flex items-center space-x-2">
             <Icon name="AlertCircle" size={16} color="var(--color-destructive)" />
-            <p className="text-sm text-destructive">{errors?.general}</p>
+            <p className="text-sm text-destructive">{generalError}</p>
           </div>
         </div>
       )}
+
       <div className="space-y-4">
         <Input
           label="Email Address"
           type="email"
           name="email"
+          id="login-email"
           placeholder="Enter your email"
-          value={formData?.email}
+          value={formData.email}
           onChange={handleInputChange}
-          error={errors?.email}
+          error={fieldErrors.email}
           required
-          disabled={isLoading}
+          disabled={loading}
         />
 
         <Input
           label="Password"
           type="password"
           name="password"
+          id="login-password"
           placeholder="Enter your password"
-          value={formData?.password}
+          value={formData.password}
           onChange={handleInputChange}
-          error={errors?.password}
+          error={fieldErrors.password}
           required
-          disabled={isLoading}
+          disabled={loading}
         />
-
-        {showMFA && (
-          <div className="p-4 bg-secondary/10 border border-secondary/20 rounded-lg">
-            <div className="flex items-center space-x-2 mb-3">
-              <Icon name="Shield" size={16} color="var(--color-secondary)" />
-              <h3 className="text-sm font-medium text-foreground">Two-Factor Authentication</h3>
-            </div>
-            <Input
-              label="Verification Code"
-              type="text"
-              placeholder="Enter 6-digit code"
-              value={mfaCode}
-              onChange={(e) => setMfaCode(e?.target?.value)}
-              error={errors?.mfaCode}
-              description="Enter the 6-digit code from your authenticator app"
-              required
-              disabled={isLoading}
-              maxLength={6}
-            />
-          </div>
-        )}
       </div>
+
       <div className="flex items-center justify-between">
         <Checkbox
           label="Remember me"
-          checked={formData?.rememberMe}
+          checked={formData.rememberMe}
           onChange={handleInputChange}
           name="rememberMe"
-          disabled={isLoading}
+          disabled={loading}
         />
-
         <button
           type="button"
           onClick={handleForgotPassword}
           className="text-sm text-primary hover:text-primary/80 spring-animation"
-          disabled={isLoading}
+          disabled={loading}
         >
           Forgot password?
         </button>
       </div>
+
       <Button
         type="submit"
         variant="default"
         size="lg"
-        loading={isLoading}
+        loading={loading}
         fullWidth
-        iconName={showMFA ? "Shield" : "LogIn"}
+        iconName="LogIn"
         iconPosition="left"
       >
-        {showMFA ? 'Verify & Sign In' : 'Sign In'}
+        Sign In
       </Button>
+
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
           Don't have an account?{' '}
@@ -217,7 +148,7 @@ const LoginForm = () => {
             type="button"
             onClick={() => navigate('/user-registration')}
             className="text-primary hover:text-primary/80 font-medium spring-animation"
-            disabled={isLoading}
+            disabled={loading}
           >
             Sign up here
           </button>
