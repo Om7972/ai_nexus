@@ -1,0 +1,22 @@
+{
+    "watch": [
+        "*.js",
+        "config",
+        "controllers",
+        "middlewares",
+        "models",
+        "routes",
+        "services",
+        "utils",
+        "validators"
+    ],
+    "ext": "js,json",
+    "ignore": [
+        "node_modules",
+        "logs"
+    ],
+    "exec": "node --no-deprecation server.js",
+    "env": {
+        "NODE_ENV": "development"
+    }
+}
