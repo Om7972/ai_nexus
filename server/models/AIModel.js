@@ -52,10 +52,9 @@ const aiModelSchema = new Schema(
 
         slug: {
             type: String,
-            unique: true,
             lowercase: true,
             trim: true,
-            // Auto-generated from name in pre-save hook
+            // Auto-generated from name in pre-save hook; unique enforced via index below
         },
 
         description: {
@@ -180,6 +179,7 @@ const aiModelSchema = new Schema(
 
 // ── Indexes ───────────────────────────────────────────────────────────────────
 aiModelSchema.index({ name: 'text', description: 'text', tags: 'text' }); // full-text search
+aiModelSchema.index({ slug: 1 }, { unique: true });                        // unique slug
 aiModelSchema.index({ category: 1, isActive: 1, deletedAt: 1 });
 aiModelSchema.index({ provider: 1, isActive: 1 });
 aiModelSchema.index({ isFeatured: 1, isPublic: 1 });

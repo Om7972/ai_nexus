@@ -73,7 +73,6 @@ const workspaceSchema = new Schema(
 
         slug: {
             type: String,
-            unique: true,
             lowercase: true,
             trim: true,
         },
