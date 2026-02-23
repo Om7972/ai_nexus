@@ -1,56 +1,97 @@
 import React from "react";
-import Icon from "./AppIcon";
+import { motion } from "framer-motion";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 
+/**
+ * ErrorBoundary – catches React render errors and displays a themed fallback.
+ * Uses Vanilla / Rose Taupe design tokens via CSS classes.
+ */
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error, info) {
     error.__ErrorBoundary = true;
-    window.__COMPONENT_ERROR__?.(error, errorInfo);
-    // console.log("Error caught by ErrorBoundary:", error, errorInfo);
+    window.__COMPONENT_ERROR__?.(error, info);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[ErrorBoundary]', error, info);
+    }
   }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: null });
+  };
 
   render() {
-    if (this.state?.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-neutral-50">
-          <div className="text-center p-8 max-w-md">
-            <div className="flex justify-center items-center mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="42px" height="42px" viewBox="0 0 32 33" fill="none">
-                <path d="M16 28.5C22.6274 28.5 28 23.1274 28 16.5C28 9.87258 22.6274 4.5 16 4.5C9.37258 4.5 4 9.87258 4 16.5C4 23.1274 9.37258 28.5 16 28.5Z" stroke="#343330" strokeWidth="2" strokeMiterlimit="10" />
-                <path d="M11.5 15.5C12.3284 15.5 13 14.8284 13 14C13 13.1716 12.3284 12.5 11.5 12.5C10.6716 12.5 10 13.1716 10 14C10 14.8284 10.6716 15.5 11.5 15.5Z" fill="#343330" />
-                <path d="M20.5 15.5C21.3284 15.5 22 14.8284 22 14C22 13.1716 21.3284 12.5 20.5 12.5C19.6716 12.5 19 13.1716 19 14C19 14.8284 19.6716 15.5 20.5 15.5Z" fill="#343330" />
-                <path d="M21 22.5C19.9625 20.7062 18.2213 19.5 16 19.5C13.7787 19.5 12.0375 20.7062 11 22.5" stroke="#343330" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div className="flex flex-col gap-1 text-center">
-              <h1 className="text-2xl font-medium text-neutral-800">Something went wrong</h1>
-              <p className="text-neutral-600 text-base w w-8/12 mx-auto">We encountered an unexpected error while processing your request.</p>
-            </div>
-            <div className="flex justify-center items-center mt-6">
-              <button
-                onClick={() => {
-                  window.location.href = "/";
-                }}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded flex items-center gap-2 transition-colors duration-200 shadow-sm"
-              >
-                <Icon name="ArrowLeft" size={18} color="#fff" />
-                Back
-              </button>
-            </div>
-          </div >
-        </div >
-      );
-    }
+    if (!this.state.hasError) return this.props.children;
 
-    return this.props?.children;
+    return (
+      <div
+        className="min-h-screen subtle-gradient flex items-center justify-center p-6"
+        role="alert"
+        aria-live="assertive"
+      >
+        {/* Card */}
+        <div className="card max-w-md w-full p-8 text-center space-y-6 elevation-3">
+
+          {/* Icon */}
+          <div className="flex justify-center">
+            <div className="empty-state-icon">
+              <AlertTriangle size={36} aria-hidden="true" />
+            </div>
+          </div>
+
+          {/* Copy */}
+          <div className="space-y-2">
+            <h1 className="text-xl font-semibold text-foreground">
+              Something went wrong
+            </h1>
+            <p className="text-sm text-muted-foreground text-balance leading-relaxed">
+              An unexpected error occurred while rendering this page.
+              {process.env.NODE_ENV === 'development' && this.state.error && (
+                <span className="block mt-2 font-mono text-xs text-destructive/80 break-all">
+                  {this.state.error.message}
+                </span>
+              )}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={this.handleReset}
+              className={[
+                "inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md",
+                "text-sm font-medium spring-animation focus-ring",
+                "bg-primary text-primary-foreground hover:brightness-110 shadow-sm",
+              ].join(' ')}
+              aria-label="Try rendering again"
+            >
+              <RefreshCw size={15} aria-hidden="true" />
+              Try again
+            </button>
+            <a
+              href="/"
+              className={[
+                "inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md",
+                "text-sm font-medium spring-animation focus-ring",
+                "border border-border hover:bg-accent",
+              ].join(' ')}
+              aria-label="Go to home page"
+            >
+              <Home size={15} aria-hidden="true" />
+              Go home
+            </a>
+          </div>
+        </div>
+      </div>
+    );
   }
 }
 

@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useId } from "react";
 import { cn } from "../../utils/cn";
+import { AlertCircle, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Input = React.forwardRef(({
     className,
@@ -7,91 +9,159 @@ const Input = React.forwardRef(({
     label,
     description,
     error,
+    success,
     required = false,
     id,
+    prefix,
+    suffix,
     ...props
 }, ref) => {
-    // Generate unique ID if not provided
-    const inputId = id || `input-${Math.random()?.toString(36)?.substr(2, 9)}`;
+    // Stable unique ID — no random on re-render
+    const generatedId = useId();
+    const inputId = id || generatedId;
+    const errId = `${inputId}-error`;
+    const hintId = `${inputId}-hint`;
 
-    // Base input classes
-    const baseInputClasses = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+    const hasError = Boolean(error);
+    const hasSuccess = Boolean(success) && !hasError;
 
-    // Checkbox-specific styles
     if (type === "checkbox") {
         return (
             <input
                 type="checkbox"
-                className={cn(
-                    "h-4 w-4 rounded border border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                    className
-                )}
                 ref={ref}
                 id={inputId}
+                className={cn(
+                    "h-4 w-4 rounded border border-input bg-background",
+                    "text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                    "disabled:cursor-not-allowed disabled:opacity-50",
+                    "micro-interaction",
+                    className
+                )}
                 {...props}
             />
         );
     }
 
-    // Radio button-specific styles
     if (type === "radio") {
         return (
             <input
                 type="radio"
-                className={cn(
-                    "h-4 w-4 rounded-full border border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                    className
-                )}
                 ref={ref}
                 id={inputId}
+                className={cn(
+                    "h-4 w-4 rounded-full border border-input bg-background",
+                    "text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                    "disabled:cursor-not-allowed disabled:opacity-50 micro-interaction",
+                    className
+                )}
                 {...props}
             />
         );
     }
 
-    // For regular inputs with wrapper structure
     return (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
+            {/* Label */}
             {label && (
                 <label
                     htmlFor={inputId}
                     className={cn(
-                        "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-                        error ? "text-destructive" : "text-foreground"
+                        "block text-sm font-medium leading-none",
+                        hasError ? "text-destructive" : "text-foreground",
+                        "peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     )}
                 >
                     {label}
-                    {required && <span className="text-destructive ml-1">*</span>}
+                    {required && (
+                        <span className="text-destructive ml-1" aria-hidden="true">*</span>
+                    )}
                 </label>
             )}
 
-            <input
-                type={type}
-                className={cn(
-                    baseInputClasses,
-                    error && "border-destructive focus-visible:ring-destructive",
-                    className
+            {/* Input wrapper (allows prefix/suffix icons) */}
+            <div className="relative">
+                {prefix && (
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+                        {prefix}
+                    </div>
                 )}
-                ref={ref}
-                id={inputId}
-                {...props}
-            />
 
-            {description && !error && (
-                <p className="text-sm text-muted-foreground">
-                    {description}
-                </p>
-            )}
+                <input
+                    type={type}
+                    ref={ref}
+                    id={inputId}
+                    aria-required={required}
+                    aria-invalid={hasError}
+                    aria-describedby={cn(hasError && errId, description && hintId) || undefined}
+                    className={cn(
+                        "input-base",
+                        prefix && "pl-9",
+                        suffix && "pr-9",
+                        hasError && "input-error",
+                        hasSuccess && "border-success focus-visible:ring-success/30",
+                        className
+                    )}
+                    {...props}
+                />
 
-            {error && (
-                <p className="text-sm text-destructive">
-                    {error}
-                </p>
-            )}
+                {/* Trailing icon: error/success state */}
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <AnimatePresence mode="wait">
+                        {hasError && (
+                            <motion.span
+                                key="err"
+                                initial={{ opacity: 0, scale: 0.7 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.7 }}
+                                transition={{ duration: 0.15 }}
+                            >
+                                <AlertCircle size={16} className="text-destructive" aria-hidden="true" />
+                            </motion.span>
+                        )}
+                        {hasSuccess && (
+                            <motion.span
+                                key="ok"
+                                initial={{ opacity: 0, scale: 0.7 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.7 }}
+                                transition={{ duration: 0.15 }}
+                            >
+                                <CheckCircle size={16} className="text-success" aria-hidden="true" />
+                            </motion.span>
+                        )}
+                        {suffix && !hasError && !hasSuccess && (
+                            <span className="text-muted-foreground">{suffix}</span>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </div>
+
+            {/* Hint / Error message */}
+            <AnimatePresence>
+                {hasError && (
+                    <motion.p
+                        id={errId}
+                        key="error"
+                        role="alert"
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.18 }}
+                        className="text-xs text-destructive flex items-center gap-1"
+                    >
+                        {error}
+                    </motion.p>
+                )}
+                {!hasError && description && (
+                    <p id={hintId} className="text-xs text-muted-foreground">
+                        {description}
+                    </p>
+                )}
+            </AnimatePresence>
         </div>
     );
 });
 
 Input.displayName = "Input";
-
 export default Input;

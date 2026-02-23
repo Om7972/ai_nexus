@@ -1,270 +1,368 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
-import { 
-  Search, 
-  Bell, 
-  User, 
-  Settings, 
-  LogOut, 
-  Menu, 
-  X,
-  ChevronDown,
-  Sun,
-  Moon,
-  Globe
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search, Bell, Menu, X, ChevronDown, Sun, Moon, Globe
 } from 'lucide-react';
+import { cn } from '../../utils/cn';
 import { logoutUser } from '../../store/slices/authSlice';
 import { fetchNotifications } from '../../store/slices/notificationSlice';
-import { performSearch, getSearchSuggestions, setQuery, clearQuery } from '../../store/slices/searchSlice';
-import { setTheme } from '../../store/slices/userProfileSlice';
+import { performSearch, getSearchSuggestions, setQuery } from '../../store/slices/searchSlice';
+import { useTheme } from '../../context/ThemeContext';
 import NotificationDropdown from './NotificationDropdown';
 import SearchDropdown from './SearchDropdown';
 import UserProfileDropdown from './UserProfileDropdown';
 
+// ── Nav link with active indicator ───────────────────────────────────────────
+function NavLink({ to, children, onClick }) {
+  const { pathname } = useLocation();
+  const active = pathname.startsWith(to);
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      className={cn(
+        'relative px-3 py-2 rounded-md text-sm font-medium spring-animation',
+        active
+          ? 'text-primary'
+          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+      )}
+      aria-current={active ? 'page' : undefined}
+    >
+      {children}
+      {active && (
+        <motion.span
+          layoutId="header-active-pill"
+          className="absolute inset-x-1 -bottom-0.5 h-0.5 rounded-full bg-primary"
+          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+        />
+      )}
+    </Link>
+  );
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const { user, isAuthenticated } = useSelector(state => state.auth);
-  const { unreadCount } = useSelector(state => state.notifications);
-  const { query, suggestions, loading: searchLoading } = useSelector(state => state.search);
-  const { preferences } = useSelector(state => state.userProfile);
+  const { user, isAuthenticated } = useSelector(s => s.auth);
+  const { unreadCount } = useSelector(s => s.notifications);
+  const { query, suggestions, loading: searchLoading } = useSelector(s => s.search);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      dispatch(fetchNotifications());
-    }
+    if (isAuthenticated) dispatch(fetchNotifications());
   }, [dispatch, isAuthenticated]);
+
+  // Close all dropdowns on outside click
+  useEffect(() => {
+    const close = () => {
+      setIsNotificationOpen(false);
+      setIsProfileOpen(false);
+      setIsSearchOpen(false);
+    };
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, []);
 
   const handleLogout = () => {
     dispatch(logoutUser());
     navigate('/user-login');
   };
 
-  const handleSearch = (searchQuery) => {
-    if (searchQuery.trim()) {
-      dispatch(performSearch({ query: searchQuery }));
+  const handleSearch = (q) => {
+    if (q.trim()) {
+      dispatch(performSearch({ query: q }));
       setIsSearchOpen(false);
     }
   };
 
-  const handleSearchInputChange = (value) => {
-    dispatch(setQuery(value));
-    if (value.length > 2) {
-      dispatch(getSearchSuggestions(value));
-    }
+  const handleSearchChange = (v) => {
+    dispatch(setQuery(v));
+    if (v.length > 2) dispatch(getSearchSuggestions(v));
   };
 
-  const handleThemeToggle = () => {
-    const newTheme = preferences.theme === 'light' ? 'dark' : 'light';
-    dispatch(setTheme(newTheme));
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
+  const navLinks = [
+    { to: '/main-dashboard', label: 'Dashboard' },
+    { to: '/ai-data-analysis-workspace', label: 'Data Analysis' },
+    { to: '/ai-image-processing-lab', label: 'Image Lab' },
+    { to: '/ai-text-generation-studio', label: 'Text Studio' },
+  ];
 
   return (
-    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo and Navigation */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">AI</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">AI Nexus</span>
-            </Link>
+    <header
+      className="glass border-b border-border sticky top-0 z-50"
+      role="banner"
+    >
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex ml-10 space-x-8">
-              <Link 
-                to="/main-dashboard" 
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Link 
-                to="/ai-data-analysis-workspace" 
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Data Analysis
-              </Link>
-              <Link 
-                to="/ai-image-processing-lab" 
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Image Processing
-              </Link>
-              <Link 
-                to="/ai-text-generation-studio" 
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Text Generation
-              </Link>
-            </nav>
-          </div>
+          {/* ── Logo ───────────────────────────────────────────────── */}
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 shrink-0 focus-ring rounded-lg"
+            aria-label="AI Nexus home"
+          >
+            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center shadow-sm">
+              <span className="text-white font-bold text-xs tracking-tight">AI</span>
+            </div>
+            <span className="text-lg font-semibold text-foreground hidden sm:block tracking-tight">
+              AI Nexus
+            </span>
+          </Link>
 
-          {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-8">
+          {/* ── Desktop nav ────────────────────────────────────────── */}
+          <nav
+            className="hidden md:flex items-center gap-1"
+            aria-label="Main navigation"
+          >
+            {navLinks.map(l => (
+              <NavLink key={l.to} to={l.to}>{l.label}</NavLink>
+            ))}
+          </nav>
+
+          {/* ── Search bar ─────────────────────────────────────────── */}
+          <div
+            className="hidden md:flex flex-1 max-w-sm"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+                aria-hidden="true"
+              />
               <input
-                type="text"
-                placeholder="Search projects, documents, users..."
+                type="search"
+                role="searchbox"
+                aria-label="Search projects, models, users"
+                placeholder="Search…"
                 value={query}
-                onChange={(e) => handleSearchInputChange(e.target.value)}
+                onChange={e => handleSearchChange(e.target.value)}
                 onFocus={() => setIsSearchOpen(true)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className={cn(
+                  "input-base pl-9 pr-3 text-sm bg-background/80",
+                  "placeholder:text-muted-foreground/70"
+                )}
               />
               {searchLoading && (
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div
+                    className="h-3.5 w-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin"
+                    aria-label="Searching…"
+                  />
                 </div>
               )}
-              {isSearchOpen && suggestions.length > 0 && (
-                <SearchDropdown 
-                  suggestions={suggestions}
-                  onSelect={handleSearch}
-                  onClose={() => setIsSearchOpen(false)}
-                />
-              )}
+              <AnimatePresence>
+                {isSearchOpen && suggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <SearchDropdown
+                      suggestions={suggestions}
+                      onSelect={handleSearch}
+                      onClose={() => setIsSearchOpen(false)}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
-          {/* Right Side Actions */}
-          <div className="flex items-center space-x-4">
-            {/* Theme Toggle */}
+          {/* ── Right actions ──────────────────────────────────────── */}
+          <div className="flex items-center gap-1">
+
+            {/* Theme toggle */}
             <button
-              onClick={handleThemeToggle}
-              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent micro-interaction focus-ring"
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={isDark ? 'Light mode' : 'Dark mode'}
             >
-              {preferences.theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={isDark ? 'sun' : 'moon'}
+                  initial={{ rotate: -30, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 30, opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  className="block"
+                >
+                  {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                </motion.span>
+              </AnimatePresence>
             </button>
 
-            {/* Language Selector */}
-            <button className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
-              <Globe className="h-5 w-5" />
+            {/* Language (placeholder) */}
+            <button
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent micro-interaction focus-ring"
+              aria-label="Select language"
+            >
+              <Globe size={18} />
             </button>
 
             {isAuthenticated ? (
               <>
                 {/* Notifications */}
-                <div className="relative">
+                <div
+                  className="relative"
+                  onClick={e => e.stopPropagation()}
+                >
                   <button
-                    onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors relative"
+                    onClick={() => setIsNotificationOpen(v => !v)}
+                    aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+                    aria-expanded={isNotificationOpen}
+                    aria-haspopup="true"
+                    className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent micro-interaction focus-ring"
                   >
-                    <Bell className="h-5 w-5" />
+                    <Bell size={18} />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                        className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center"
+                        aria-hidden="true"
+                      >
                         {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
+                      </motion.span>
                     )}
                   </button>
-                  {isNotificationOpen && (
-                    <NotificationDropdown onClose={() => setIsNotificationOpen(false)} />
-                  )}
+                  <AnimatePresence>
+                    {isNotificationOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                        transition={{ duration: 0.18 }}
+                      >
+                        <NotificationDropdown onClose={() => setIsNotificationOpen(false)} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                {/* User Profile */}
-                <div className="relative">
+                {/* User profile */}
+                <div
+                  className="relative"
+                  onClick={e => e.stopPropagation()}
+                >
                   <button
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="flex items-center space-x-2 p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    onClick={() => setIsProfileOpen(v => !v)}
+                    aria-label="User menu"
+                    aria-expanded={isProfileOpen}
+                    aria-haspopup="true"
+                    className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-accent micro-interaction focus-ring"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                      {user?.avatar ? (
-                        <img src={user.avatar} alt="Profile" className="w-8 h-8 rounded-full" />
-                      ) : (
-                        <span className="text-white text-sm font-medium">
+                    <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center shadow-sm shrink-0">
+                      {user?.avatar
+                        ? <img src={user.avatar} alt="" className="w-8 h-8 rounded-full object-cover" aria-hidden="true" />
+                        : <span className="text-white text-sm font-semibold" aria-hidden="true">
                           {user?.firstName?.charAt(0) || user?.email?.charAt(0) || 'U'}
                         </span>
-                      )}
+                      }
                     </div>
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
-                  {isProfileOpen && (
-                    <UserProfileDropdown 
-                      user={user}
-                      onClose={() => setIsProfileOpen(false)}
-                      onLogout={handleLogout}
+                    <ChevronDown
+                      size={14}
+                      className={cn(
+                        "text-muted-foreground hidden sm:block spring-animation",
+                        isProfileOpen && "rotate-180"
+                      )}
+                      aria-hidden="true"
                     />
-                  )}
+                  </button>
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                        transition={{ duration: 0.18 }}
+                      >
+                        <UserProfileDropdown
+                          user={user}
+                          onClose={() => setIsProfileOpen(false)}
+                          onLogout={handleLogout}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-2">
                 <Link
                   to="/user-login"
-                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground spring-animation focus-ring rounded-md"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/user-registration"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium rounded-md gradient-primary text-white shadow-sm hover:brightness-110 spring-animation focus-ring"
                 >
                   Sign Up
                 </Link>
               </div>
             )}
 
-            {/* Mobile Menu Button */}
+            {/* Mobile hamburger */}
             <button
-              onClick={toggleMobileMenu}
-              className="md:hidden p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+              onClick={() => setIsMobileMenuOpen(v => !v)}
+              aria-label="Toggle mobile menu"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-menu"
+              className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent micro-interaction focus-ring"
             >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={isMobileMenuOpen ? 'close' : 'open'}
+                  initial={{ rotate: -30, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 30, opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="block"
+                >
+                  {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                </motion.span>
+              </AnimatePresence>
             </button>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200 dark:border-gray-700">
-              <Link
-                to="/main-dashboard"
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/ai-data-analysis-workspace"
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Data Analysis
-              </Link>
-              <Link
-                to="/ai-image-processing-lab"
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Image Processing
-              </Link>
-              <Link
-                to="/ai-text-generation-studio"
-                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Text Generation
-              </Link>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* ── Mobile menu ──────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.nav
+            id="mobile-menu"
+            aria-label="Mobile navigation"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22 }}
+            className="md:hidden overflow-hidden border-t border-border"
+          >
+            <div className="px-4 py-3 space-y-1">
+              {navLinks.map(l => (
+                <NavLink key={l.to} to={l.to} onClick={() => setIsMobileMenuOpen(false)}>
+                  {l.label}
+                </NavLink>
+              ))}
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </header>
   );
 };
