@@ -12,7 +12,7 @@ const buttonVariants = cva(
         "ring-offset-background select-none",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         "disabled:pointer-events-none disabled:opacity-50",
-        "transition-all duration-[--t-normal] ease-[--ease-spring]",
+        "transition-all duration-[var(--t-normal)] ease-[var(--ease-spring)]",
         "active:scale-[0.97]",
     ],
     {

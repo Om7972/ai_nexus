@@ -15,7 +15,7 @@
         "node_modules",
         "logs"
     ],
-    "exec": "node --no-deprecation server.js",
+    "exec": "node --no-deprecation",
     "env": {
         "NODE_ENV": "development"
     }
