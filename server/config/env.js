@@ -31,8 +31,17 @@ const envSchema = z.object({
     ),
     JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
-    // CORS
-    CLIENT_ORIGIN: z.string().url('CLIENT_ORIGIN must be a valid URL').default('http://localhost:5173'),
+    // CORS (allow comma-separated URLs)
+    CLIENT_ORIGIN: z.string().refine((val) => {
+        return val.split(',').every((v) => {
+            try {
+                new URL(v.trim());
+                return true;
+            } catch {
+                return false;
+            }
+        });
+    }, 'CLIENT_ORIGIN must be a valid URL or comma-separated valid URLs').default('http://localhost:5173'),
 
     // Rate limiting
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900000),
