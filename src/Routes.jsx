@@ -9,7 +9,16 @@ import MainDashboard from './pages/main-dashboard';
 import AIImageProcessingLab from './pages/ai-image-processing-lab';
 import UserRegistration from './pages/user-registration';
 import AITextGenerationStudio from './pages/ai-text-generation-studio';
-import UserProfileSettings from './pages/user-profile-settings';
+
+// New Individual Account/Settings Pages
+import UserProfile from './pages/user-profile';
+import UserSettings from './pages/user-settings';
+import SubscriptionManagement from './pages/subscription-management';
+import Billing from './pages/billing';
+import SecuritySettings from './pages/security-settings';
+import HelpSupport from './pages/help-support';
+import NotificationsPage from './pages/notifications';
+
 import AuthGuard from './components/AuthGuard';
 
 const Routes = () => {
@@ -56,9 +65,39 @@ const Routes = () => {
               <AITextGenerationStudio />
             </AuthGuard>
           } />
-          <Route path="/user-profile-settings" element={
+          <Route path="/user-profile" element={
             <AuthGuard requireAuth={true}>
-              <UserProfileSettings />
+              <UserProfile />
+            </AuthGuard>
+          } />
+          <Route path="/user-settings" element={
+            <AuthGuard requireAuth={true}>
+              <UserSettings />
+            </AuthGuard>
+          } />
+          <Route path="/subscription-management" element={
+            <AuthGuard requireAuth={true}>
+              <SubscriptionManagement />
+            </AuthGuard>
+          } />
+          <Route path="/billing" element={
+            <AuthGuard requireAuth={true}>
+              <Billing />
+            </AuthGuard>
+          } />
+          <Route path="/security-settings" element={
+            <AuthGuard requireAuth={true}>
+              <SecuritySettings />
+            </AuthGuard>
+          } />
+          <Route path="/help-support" element={
+            <AuthGuard requireAuth={true}>
+              <HelpSupport />
+            </AuthGuard>
+          } />
+          <Route path="/notifications" element={
+            <AuthGuard requireAuth={true}>
+              <NotificationsPage />
             </AuthGuard>
           } />
 

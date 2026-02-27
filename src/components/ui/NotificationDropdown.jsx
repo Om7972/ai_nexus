@@ -1,24 +1,26 @@
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { 
-  Bell, 
-  X, 
-  Check, 
-  Trash2, 
+import {
+  Bell,
+  X,
+  Check,
+  Trash2,
   Settings,
   MessageSquare,
   AlertTriangle,
   Info,
   CheckCircle
 } from 'lucide-react';
-import { 
-  markNotificationAsRead, 
-  markAllNotificationsAsRead, 
-  deleteNotification 
+import {
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification
 } from '../../store/slices/notificationSlice';
 import { formatDistanceToNow } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 const NotificationDropdown = ({ onClose }) => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const dropdownRef = useRef(null);
   const { notifications, unreadCount, loading } = useSelector(state => state.notifications);
@@ -81,7 +83,7 @@ const NotificationDropdown = ({ onClose }) => {
   };
 
   return (
-    <div 
+    <div
       ref={dropdownRef}
       className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
     >
@@ -134,9 +136,8 @@ const NotificationDropdown = ({ onClose }) => {
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-l-4 ${getNotificationColor(notification.type)} ${
-                  !notification.read ? 'bg-blue-50 dark:bg-blue-900/10' : ''
-                }`}
+                className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-l-4 ${getNotificationColor(notification.type)} ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/10' : ''
+                  }`}
               >
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0 mt-0.5">
@@ -144,11 +145,10 @@ const NotificationDropdown = ({ onClose }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">
-                      <p className={`text-sm font-medium ${
-                        !notification.read 
-                          ? 'text-gray-900 dark:text-white' 
-                          : 'text-gray-700 dark:text-gray-300'
-                      }`}>
+                      <p className={`text-sm font-medium ${!notification.read
+                        ? 'text-gray-900 dark:text-white'
+                        : 'text-gray-700 dark:text-gray-300'
+                        }`}>
                         {notification.title}
                       </p>
                       <div className="flex items-center space-x-1">
@@ -198,7 +198,13 @@ const NotificationDropdown = ({ onClose }) => {
             <Settings className="h-4 w-4" />
             <span>Notification settings</span>
           </button>
-          <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
+          <button
+            onClick={() => {
+              navigate('/notifications');
+              onClose();
+            }}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+          >
             View all
           </button>
         </div>
