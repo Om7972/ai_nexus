@@ -8,7 +8,7 @@ import AIDataAnalysisWorkspace from './pages/ai-data-analysis-workspace';
 import MainDashboard from './pages/main-dashboard';
 import AIImageProcessingLab from './pages/ai-image-processing-lab';
 import UserRegistration from './pages/user-registration';
-import AITextGenerationStudio from './pages/ai-text-generation-studio';
+import TextStudio from './pages/text-studio';
 
 // New Individual Account/Settings Pages
 import UserProfile from './pages/user-profile';
@@ -60,9 +60,9 @@ const Routes = () => {
               <AIImageProcessingLab />
             </AuthGuard>
           } />
-          <Route path="/ai-text-generation-studio" element={
+          <Route path="/text-studio" element={
             <AuthGuard requireAuth={true}>
-              <AITextGenerationStudio />
+              <TextStudio />
             </AuthGuard>
           } />
           <Route path="/user-profile" element={

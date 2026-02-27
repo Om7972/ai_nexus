@@ -93,7 +93,7 @@ const Header = () => {
     { to: '/main-dashboard', label: 'Dashboard' },
     { to: '/ai-data-analysis-workspace', label: 'Data Analysis' },
     { to: '/ai-image-processing-lab', label: 'Image Lab' },
-    { to: '/ai-text-generation-studio', label: 'Text Studio' },
+    { to: '/text-studio', label: 'Text Studio' },
   ];
 
   return (

@@ -22,6 +22,7 @@ import userRoutes from './routes/userRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import aiModelRoutes from './routes/aiModelRoutes.js';
 import workspaceRoutes from './routes/workspaceRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 // ── App initialization ────────────────────────────────────────────────────────
 const app = express();
@@ -68,6 +69,7 @@ app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/projects', projectRoutes);
 app.use('/api/v1/models', aiModelRoutes);
 app.use('/api/v1/workspaces', workspaceRoutes);
+app.use('/api/v1/ai', aiRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. 404 HANDLER  (catch-all – must be after all routes)
