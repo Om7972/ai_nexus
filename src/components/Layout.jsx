@@ -133,7 +133,7 @@ const Layout = ({ children, showSidebar = true, showHeader = true }) => {
         {/* Page content */}
         <main
           id="main-content"
-          className={`flex-1 min-w-0 transition-[margin] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isMobile ? '' : sidebarW
+          className={`flex-1 min-w-0 transition-[margin] duration-300 ease-spring ${isMobile ? '' : sidebarW
             }`}
           tabIndex={-1}
         >

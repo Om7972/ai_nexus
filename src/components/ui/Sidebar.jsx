@@ -31,7 +31,7 @@ const Sidebar = ({ isCollapsed = false, onToggleCollapse }) => {
       className={cn(
         'fixed left-0 top-16 bottom-0 z-40 glass border-r border-border',
         'flex flex-col',
-        'transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
+        'transition-[width] duration-300 ease-spring',
         isCollapsed ? 'w-16' : 'w-64'
       )}
       aria-label="Sidebar navigation"
