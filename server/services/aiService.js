@@ -1,4 +1,5 @@
 import TextGeneration from '../models/TextGeneration.js';
+import ImageAsset from '../models/ImageAsset.js';
 import AppError from '../utils/AppError.js';
 
 /**
@@ -70,4 +71,56 @@ export const getHistory = async (userId) => {
         .sort({ createdAt: -1 })
         .limit(50);
     return history;
+};
+
+export const generateImage = async ({ prompt, resolution, model, userId }) => {
+    // Simulated delay
+    await new Promise(resolve => setTimeout(resolve, 2500));
+
+    // Simulated generated image URL (Random tech/abstract image from unsplash)
+    const randomId = Math.floor(Math.random() * 1000);
+    const mockImageUrl = `https://picsum.photos/seed/${randomId}/${resolution.split('x')[0]}/${resolution.split('x')[1]}`;
+
+    const imageGenRecord = await ImageAsset.create({
+        user: userId,
+        prompt,
+        type: 'generation',
+        toolUsed: model || 'dall-e-3',
+        processedImageUrl: mockImageUrl,
+        resolution
+    });
+
+    return imageGenRecord;
+};
+
+export const processImage = async ({ file, tool, prompt, resolution, userId, req }) => {
+    // file is provided by multer locally
+    const originalUrl = `${req.protocol}://${req.get('host')}/api/v1/uploads/${file.filename}`;
+
+    // Simulating processing delay
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // In a real app we would call an AI endpoint using the originalUrl or buffer. 
+    // Here we'll just mock a processed result using another unsplash image or just returning the same as "processed" to simulate effect
+    const processedImageUrl = `https://picsum.photos/seed/${file.filename}/800/800`;
+
+    const imageProcessRecord = await ImageAsset.create({
+        user: userId,
+        prompt,
+        type: 'processing',
+        toolUsed: tool,
+        originalImageUrl: originalUrl,
+        processedImageUrl: processedImageUrl,
+        format: file.mimetype.split('/')[1],
+        size: file.size,
+        resolution: resolution || 'Original'
+    });
+
+    return imageProcessRecord;
+};
+
+export const getImageHistory = async (userId) => {
+    return await ImageAsset.find({ user: userId })
+        .sort({ createdAt: -1 })
+        .limit(50);
 };

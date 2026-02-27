@@ -15,6 +15,11 @@ import { applySecurityMiddleware, generateCsrfToken } from './config/security.js
 import requestLogger from './middlewares/requestLogger.js';
 import errorHandler from './middlewares/errorHandler.js';
 import AppError from './utils/AppError.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ── Route imports ─────────────────────────────────────────────────────────────
 import authRoutes from './routes/authRoutes.js';
@@ -43,6 +48,9 @@ app.use(requestLogger);
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. ROUTES
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Serve uploaded images statically
+app.use('/api/v1/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── Health-check – no auth required ──────────────────────────────────────────
 app.get('/api/v1/health', (_req, res) => {

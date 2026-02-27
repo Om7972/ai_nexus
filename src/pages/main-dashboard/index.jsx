@@ -69,7 +69,7 @@ const MainDashboard = () => {
       title: "Text Generation Studio",
       description: "Create content with advanced AI models",
       icon: "FileText",
-      path: "/ai-text-generation-studio",
+      path: "/text-studio",
       usage: 1250,
       limit: 2000,
       color: "secondary"
@@ -227,7 +227,7 @@ const MainDashboard = () => {
       description: "Create new text content",
       icon: "PenTool",
       type: "primary",
-      path: "/ai-text-generation-studio"
+      path: "/text-studio"
     },
     {
       id: 2,
@@ -302,13 +302,12 @@ const MainDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <Sidebar 
-        isCollapsed={sidebarCollapsed} 
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      <Sidebar
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      <main className={`pt-16 transition-all duration-300 ${
-        sidebarCollapsed ? 'ml-16' : 'ml-64'
-      }`}>
+      <main className={`pt-16 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'
+        }`}>
         <div className="p-6 max-w-7xl mx-auto">
           {/* Welcome Section */}
           <div className="mb-8">
