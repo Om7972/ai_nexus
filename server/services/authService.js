@@ -71,11 +71,21 @@ export const verifyEmail = async (rawToken, res) => {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export const login = async ({ email, password }, res) => {
+    console.log(`[AuthService] Attempting login for email: ${email}`);
     const user = await User.findOne({ email }).select('+password +refreshToken');
-    if (!user || !(await user.comparePassword(password))) {
+
+    if (!user) {
+        console.log(`[AuthService] Login failed: User not found for email ${email}`);
         throw new AppError('Invalid email or password.', 401);
     }
 
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+        console.log(`[AuthService] Login failed: Password mismatch for email ${email}`);
+        throw new AppError('Invalid email or password.', 401);
+    }
+
+    console.log(`[AuthService] Login successful for email ${email}`);
     const { accessToken, refreshToken } = sendTokens(res, user);
 
     // Store refresh token (for rotation & revocation)
