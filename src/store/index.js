@@ -6,6 +6,7 @@ import notificationReducer from './slices/notificationSlice';
 import searchReducer from './slices/searchSlice';
 import textStudioReducer from './slices/textStudioSlice';
 import imageLabReducer from './slices/imageLabSlice';
+import analyticsReducer from './slices/analyticsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     search: searchReducer,
     textStudio: textStudioReducer,
     imageLab: imageLabReducer,
+    analytics: analyticsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

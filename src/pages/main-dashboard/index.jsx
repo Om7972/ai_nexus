@@ -87,7 +87,7 @@ const MainDashboard = () => {
       title: "Data Analysis Workspace",
       description: "Analyze data with machine learning",
       icon: "BarChart3",
-      path: "/ai-data-analysis-workspace",
+      path: "/data-workspace",
       usage: 320,
       limit: 500,
       color: "success"
@@ -243,7 +243,7 @@ const MainDashboard = () => {
       description: "Run data analysis",
       icon: "TrendingUp",
       type: "success",
-      path: "/ai-data-analysis-workspace"
+      path: "/data-workspace"
     },
     {
       id: 4,

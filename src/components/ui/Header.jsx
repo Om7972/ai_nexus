@@ -91,7 +91,7 @@ const Header = () => {
 
   const navLinks = [
     { to: '/main-dashboard', label: 'Dashboard' },
-    { to: '/ai-data-analysis-workspace', label: 'Data Analysis' },
+    { to: '/data-workspace', label: 'Data Analysis' },
     { to: '/ai-image-processing-lab', label: 'Image Lab' },
     { to: '/text-studio', label: 'Text Studio' },
   ];

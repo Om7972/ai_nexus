@@ -4,7 +4,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import ErrorBoundary from "./components/ErrorBoundary";
 import NotFound from "./pages/NotFound";
 import UserLogin from "./pages/user-login";
-import AIDataAnalysisWorkspace from './pages/ai-data-analysis-workspace';
+import DataWorkspace from './pages/data-workspace';
 import MainDashboard from './pages/main-dashboard';
 import AIImageProcessingLab from './pages/ai-image-processing-lab';
 import UserRegistration from './pages/user-registration';
@@ -50,9 +50,9 @@ const Routes = () => {
               <MainDashboard />
             </AuthGuard>
           } />
-          <Route path="/ai-data-analysis-workspace" element={
+          <Route path="/data-workspace" element={
             <AuthGuard requireAuth={true}>
-              <AIDataAnalysisWorkspace />
+              <DataWorkspace />
             </AuthGuard>
           } />
           <Route path="/ai-image-processing-lab" element={
