@@ -30,7 +30,7 @@ const Routes = () => {
           {/* Public routes */}
           <Route path="/" element={
             <AuthGuard requireAuth={false}>
-              <AIDataAnalysisWorkspace />
+              <UserLogin />
             </AuthGuard>
           } />
           <Route path="/user-login" element={
