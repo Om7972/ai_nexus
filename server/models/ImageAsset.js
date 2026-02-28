@@ -7,6 +7,11 @@ const imageAssetSchema = new mongoose.Schema(
             ref: 'User',
             required: true,
         },
+        workspace: {
+            type: mongoose.Schema.ObjectId,
+            ref: 'Workspace',
+            default: null,
+        },
         prompt: {
             type: String,
         },

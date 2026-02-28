@@ -7,12 +7,13 @@ import { aiManager } from './aiProviders/index.js';
  * Generate text using a requested AI model.
  * Real implementation routing via the AI Provider Abstraction Layer (aiManager).
  */
-export const generateText = async ({ prompt, tone, model, length, userId }) => {
+export const generateText = async ({ prompt, tone, model, length, userId, workspaceId }) => {
     const generationResult = await aiManager.generateText({ prompt, tone, model, length });
 
     // Save to MongoDB
     const textGenRecord = await TextGeneration.create({
         user: userId,
+        workspace: workspaceId || null,
         prompt,
         tone,
         model: generationResult.model,
@@ -38,11 +39,12 @@ export const getHistory = async (userId) => {
     return history;
 };
 
-export const generateImage = async ({ prompt, resolution, model, userId }) => {
+export const generateImage = async ({ prompt, resolution, model, userId, workspaceId }) => {
     const generationResult = await aiManager.generateImage({ prompt, resolution, model });
 
     const imageGenRecord = await ImageAsset.create({
         user: userId,
+        workspace: workspaceId || null,
         prompt,
         type: 'generation',
         toolUsed: generationResult.toolUsed || model || 'dall-e-3',
@@ -53,7 +55,7 @@ export const generateImage = async ({ prompt, resolution, model, userId }) => {
     return imageGenRecord;
 };
 
-export const processImage = async ({ file, tool, prompt, resolution, userId, req }) => {
+export const processImage = async ({ file, tool, prompt, resolution, userId, workspaceId, req }) => {
     // file is provided by multer locally
     const originalUrl = `${req.protocol}://${req.get('host')}/api/v1/uploads/${file.filename}`;
 
@@ -66,6 +68,7 @@ export const processImage = async ({ file, tool, prompt, resolution, userId, req
 
     const imageProcessRecord = await ImageAsset.create({
         user: userId,
+        workspace: workspaceId || null,
         prompt,
         type: 'processing',
         toolUsed: tool,

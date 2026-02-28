@@ -28,6 +28,10 @@ router.delete('/:id/members/:uid', ctrl.removeMember);
 // ── Sub-resource: projects ────────────────────────────────────────────────────
 router.get('/:id/projects', ctrl.listWorkspaceProjects);
 
+// ── Sub-resource: assets ──────────────────────────────────────────────────────
+router.get('/:id/texts', ctrl.listWorkspaceTexts);
+router.get('/:id/images', ctrl.listWorkspaceImages);
+
 // ── Sub-resource: activity audit ─────────────────────────────────────────────
 router.get('/:id/activity', ctrl.getWorkspaceActivity);
 

@@ -17,6 +17,8 @@
 
 import Workspace from '../models/Workspace.js';
 import Project from '../models/Project.js';
+import TextGeneration from '../models/TextGeneration.js';
+import ImageAsset from '../models/ImageAsset.js';
 import ActivityLog, { LOG_ACTIONS } from '../models/ActivityLog.js';
 import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/AppError.js';
@@ -314,4 +316,46 @@ export const getWorkspaceActivity = catchAsync(async (req, res, next) => {
     ]);
 
     sendPaginated(res, data, { page, limit, total }, 'Workspace activity retrieved.');
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GET /workspaces/:id/texts
+// ══════════════════════════════════════════════════════════════════════════════
+export const listWorkspaceTexts = catchAsync(async (req, res, next) => {
+    parseId(req.params.id, 'Workspace ID');
+
+    const workspace = await requireWorkspace(req.params.id, next);
+    if (!workspace) return;
+    if (!workspace.hasRole(req.user._id, 'viewer') && req.user.role !== 'admin') {
+        return next(new AppError('Access denied.', 403));
+    }
+
+    const { data, meta } = await buildQuery(TextGeneration, req.query, {
+        defaultSort: '-createdAt',
+        baseFilter: { workspace: req.params.id },
+        populate: [{ path: 'user', select: 'name avatar' }],
+    });
+
+    sendPaginated(res, data, meta, 'Workspace text generations retrieved.');
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GET /workspaces/:id/images
+// ══════════════════════════════════════════════════════════════════════════════
+export const listWorkspaceImages = catchAsync(async (req, res, next) => {
+    parseId(req.params.id, 'Workspace ID');
+
+    const workspace = await requireWorkspace(req.params.id, next);
+    if (!workspace) return;
+    if (!workspace.hasRole(req.user._id, 'viewer') && req.user.role !== 'admin') {
+        return next(new AppError('Access denied.', 403));
+    }
+
+    const { data, meta } = await buildQuery(ImageAsset, req.query, {
+        defaultSort: '-createdAt',
+        baseFilter: { workspace: req.params.id },
+        populate: [{ path: 'user', select: 'name avatar' }],
+    });
+
+    sendPaginated(res, data, meta, 'Workspace image assets retrieved.');
 });
