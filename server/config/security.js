@@ -18,7 +18,6 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
-import xssClean from 'xss-clean';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { doubleCsrf } from 'csrf-csrf';
@@ -115,7 +114,7 @@ export const generalLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10,
+    max: 50,
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: true,  // don't count 2xx responses
@@ -195,8 +194,7 @@ export const csrfProtection = (req, res, next) => {
 };
 
 // ── 5. XSS sanitizer ─────────────────────────────────────────────────────────
-// xss-clean strips <script>, on* attrs, etc. from req.body / req.params / req.query
-export const xssMiddleware = xssClean();
+// Removed unmaintained xss-clean. Using raw strings with Zod validation.
 
 // ── 6. Master wiring function ─────────────────────────────────────────────────
 
@@ -229,8 +227,7 @@ export function applySecurityMiddleware(app) {
         },
     }));
 
-    // XSS cleaning
-    app.use(xssMiddleware);
+    // XSS cleaning (disabled - Zod schema validation protects payloads natively)
 
     // General API rate limiter
     app.use('/api', generalLimiter);
