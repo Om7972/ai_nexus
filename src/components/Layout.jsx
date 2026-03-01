@@ -3,6 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './ui/Header';
 import Sidebar from './ui/Sidebar';
+import Breadcrumb from './ui/Breadcrumb';
+import CommandPalette from './CommandPalette';
 import { verifyToken } from '../store/slices/authSlice';
 import { useTheme } from '../context/ThemeContext';
 import { SkeletonStat } from './ui/Skeleton';
@@ -86,6 +88,7 @@ const Layout = ({ children, showSidebar = true, showHeader = true }) => {
       className="min-h-screen bg-background transition-colors duration-300"
       data-theme={theme}
     >
+      <CommandPalette />
       {/* Header */}
       <AnimatePresence>
         {showHeader && (
@@ -141,6 +144,7 @@ const Layout = ({ children, showSidebar = true, showHeader = true }) => {
             exit="exit"
             className="p-5 sm:p-6 min-h-[calc(100vh-64px)]"
           >
+            {showHeader && showSidebar && <Breadcrumb />}
             {children}
           </motion.div>
         </main>

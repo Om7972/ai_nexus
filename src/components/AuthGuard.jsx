@@ -4,11 +4,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { verifyToken } from '../store/slices/authSlice';
 
-const AuthGuard = ({ children, requireAuth = true, redirectTo = '/user-login' }) => {
+const AuthGuard = ({ children, requireAuth = true, roles = [], redirectTo = '/user-login' }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, loading, token } = useSelector((state) => state.auth);
+  const { isAuthenticated, loading, token, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
     // If we have a token but aren't authenticated, verify it
@@ -29,9 +29,15 @@ const AuthGuard = ({ children, requireAuth = true, redirectTo = '/user-login' })
         const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/main-dashboard';
         sessionStorage.removeItem('redirectAfterLogin');
         navigate(redirectPath, { replace: true });
+      } else if (requireAuth && isAuthenticated && roles.length > 0) {
+        // Role based verification
+        const hasRole = roles.includes(user?.role);
+        if (!hasRole) {
+          navigate('/main-dashboard', { replace: true });
+        }
       }
     }
-  }, [isAuthenticated, loading, requireAuth, navigate, redirectTo, location.pathname]);
+  }, [isAuthenticated, loading, requireAuth, navigate, redirectTo, location.pathname, user?.role]);
 
   // Show loading state while checking authentication
   if (loading) {

@@ -1,88 +1,40 @@
-/**
- * EmptyState.jsx  –  Consistent empty-state component
- *
- * Usage:
- *   <EmptyState
- *     icon={<Inbox />}
- *     title="No projects yet"
- *     description="Get started by creating your first project."
- *     action={<Button onClick={…}>New Project</Button>}
- *   />
- */
-
 import React from 'react';
 import { motion } from 'framer-motion';
+import { FolderSearch } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
-export function EmptyState({
-    icon,
-    title,
-    description,
+const EmptyState = ({
+    icon: Icon = FolderSearch,
+    title = 'No data available',
+    description = 'There are no active records to display at this time.',
     action,
-    className,
-    compact = false,
-}) {
+    className
+}) => {
     return (
         <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
             className={cn(
-                'empty-state',
-                compact && 'py-8',
+                "flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-border/60 bg-card/30 min-h-[300px]",
                 className
             )}
-            role="status"
-            aria-label={title}
         >
-            {icon && (
-                <motion.div
-                    initial={{ scale: 0.7, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.08, duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
-                    className="empty-state-icon"
-                    aria-hidden="true"
-                >
-                    {React.cloneElement(icon, { size: compact ? 28 : 36 })}
-                </motion.div>
-            )}
-
-            <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.3 }}
-                className="space-y-1.5"
-            >
-                {title && (
-                    <h3 className={cn(
-                        'font-semibold text-foreground',
-                        compact ? 'text-base' : 'text-lg'
-                    )}>
-                        {title}
-                    </h3>
-                )}
-                {description && (
-                    <p className={cn(
-                        'text-muted-foreground max-w-xs mx-auto text-balance leading-relaxed',
-                        compact ? 'text-xs' : 'text-sm'
-                    )}>
-                        {description}
-                    </p>
-                )}
-            </motion.div>
-
+            <div className="w-20 h-20 bg-accent/50 rounded-full flex items-center justify-center mb-6 shadow-inner ring-4 ring-primary/5">
+                <Icon className="w-10 h-10 text-muted-foreground/60 drop-shadow-sm" />
+            </div>
+            <h3 className="text-xl font-bold text-foreground tracking-tight mb-2">
+                {title}
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-[280px] leading-relaxed mb-8 font-medium">
+                {description}
+            </p>
             {action && (
-                <motion.div
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25, duration: 0.3 }}
-                    className="mt-5"
-                >
+                <div className="empty-state-action">
                     {action}
-                </motion.div>
+                </div>
             )}
         </motion.div>
     );
-}
+};
 
 export default EmptyState;
