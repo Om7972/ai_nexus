@@ -21,7 +21,16 @@ export const register = async ({ name, email, password }, res) => {
     const existing = await User.findOne({ email }).select('+isActive');
     if (existing) throw new AppError('An account with this email already exists.', 409);
 
-    const user = await User.create({ name, email, password });
+    // Role Assignment
+    let role = 'user';
+    let plan = 'free';
+
+    if (email.toLowerCase() === 'odhumkekar@gmail.com') {
+        role = 'admin';
+        plan = 'enterprise';
+    }
+
+    const user = await User.create({ name, email, password, role, plan });
 
     // Generate email verification token (stored, non-blocking send)
     const verifyToken = user.createEmailVerificationToken();
