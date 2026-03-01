@@ -6,6 +6,8 @@ const Checkbox = React.forwardRef(({
     className,
     id,
     checked,
+    onCheckedChange,
+    onChange,
     indeterminate = false,
     disabled = false,
     required = false,
@@ -33,6 +35,10 @@ const Checkbox = React.forwardRef(({
                     ref={ref}
                     id={checkboxId}
                     checked={checked}
+                    onChange={(e) => {
+                        onChange?.(e);
+                        onCheckedChange?.(e.target.checked);
+                    }}
                     disabled={disabled}
                     required={required}
                     className="sr-only"

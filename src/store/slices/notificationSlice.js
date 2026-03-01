@@ -9,8 +9,8 @@ export const fetchNotifications = createAsyncThunk(
       await new Promise(resolve => setTimeout(resolve, 600));
       return {
         notifications: [
-          { id: 1, title: 'Welcome to AI Nexus', message: 'Get started by creating your first project.', read: false, date: new Date().toISOString() },
-          { id: 2, title: 'New Feature Alert', message: 'Try out our new Gemini-powered Text Studio!', read: false, date: new Date(Date.now() - 86400000).toISOString() }
+          { id: 1, title: 'Welcome to AI Nexus', message: 'Get started by creating your first project.', read: false, createdAt: new Date().toISOString(), type: 'info' },
+          { id: 2, title: 'New Feature Alert', message: 'Try out our new Gemini-powered Text Studio!', read: false, createdAt: new Date(Date.now() - 86400000).toISOString(), type: 'success' }
         ],
         unreadCount: 2,
         settings: {
@@ -29,11 +29,12 @@ export const markNotificationAsRead = createAsyncThunk(
   'notifications/markNotificationAsRead',
   async (notificationId, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      const response = await axios.put(`/api/notifications/${notificationId}/read`, {}, {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      });
-      return response.data;
+      // const { auth } = getState();
+      // const response = await axios.put(`/api/notifications/${notificationId}/read`, {}, {
+      //   headers: { Authorization: `Bearer ${auth.token}` }
+      // });
+      await new Promise(r => setTimeout(r, 300));
+      return { id: notificationId };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to mark notification as read');
     }
@@ -44,11 +45,12 @@ export const markAllNotificationsAsRead = createAsyncThunk(
   'notifications/markAllNotificationsAsRead',
   async (_, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      const response = await axios.put('/api/notifications/read-all', {}, {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      });
-      return response.data;
+      // const { auth } = getState();
+      // const response = await axios.put('/api/notifications/read-all', {}, {
+      //   headers: { Authorization: `Bearer ${auth.token}` }
+      // });
+      await new Promise(r => setTimeout(r, 300));
+      return { success: true };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to mark all notifications as read');
     }
@@ -59,10 +61,11 @@ export const deleteNotification = createAsyncThunk(
   'notifications/deleteNotification',
   async (notificationId, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      await axios.delete(`/api/notifications/${notificationId}`, {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      });
+      // const { auth } = getState();
+      // await axios.delete(`/api/notifications/${notificationId}`, {
+      //   headers: { Authorization: `Bearer ${auth.token}` }
+      // });
+      await new Promise(r => setTimeout(r, 300));
       return notificationId;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete notification');
@@ -74,11 +77,12 @@ export const updateNotificationSettings = createAsyncThunk(
   'notifications/updateNotificationSettings',
   async (settings, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      const response = await axios.put('/api/notifications/settings', settings, {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      });
-      return response.data;
+      // const { auth } = getState();
+      // const response = await axios.put('/api/notifications/settings', settings, {
+      //   headers: { Authorization: `Bearer ${auth.token}` }
+      // });
+      await new Promise(r => setTimeout(r, 400));
+      return settings;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update notification settings');
     }

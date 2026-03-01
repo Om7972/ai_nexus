@@ -175,7 +175,9 @@ const NotificationDropdown = ({ onClose }) => {
                     </p>
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-xs text-gray-500 dark:text-gray-500">
-                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                        {notification.createdAt || notification.date ?
+                          formatDistanceToNow(new Date(notification.createdAt || notification.date), { addSuffix: true })
+                          : 'Just now'}
                       </span>
                       {notification.actionUrl && (
                         <button className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">

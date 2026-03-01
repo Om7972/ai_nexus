@@ -9,9 +9,13 @@ import { Checkbox } from '../../components/ui/Checkbox';
 import { fetchUserProfile, updateUserPreferences } from '../../store/slices/userProfileSlice';
 import { Palette, Bell, Save } from 'lucide-react';
 
+import { useTheme, useToast } from '../../context/ThemeContext';
+
 const UserSettings = () => {
     const dispatch = useDispatch();
     const { preferences, loading, error } = useSelector((state) => state.userProfile);
+    const { setTheme } = useTheme();
+    const toast = useToast().toast;
     const [formData, setFormData] = useState({});
 
     useEffect(() => {
@@ -37,8 +41,15 @@ const UserSettings = () => {
                 smsNotifications: formData.smsNotifications
             };
             await dispatch(updateUserPreferences(preferencesData)).unwrap();
+
+            // Sync context immediately on successful save
+            if (formData.theme) {
+                setTheme(formData.theme);
+            }
+            toast.success('Preferences saved successfully!');
         } catch (error) {
             console.error('Failed to save preferences:', error);
+            toast.error('Failed to save preferences.');
         }
     };
 

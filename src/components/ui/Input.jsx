@@ -14,6 +14,8 @@ const Input = React.forwardRef(({
     id,
     prefix,
     suffix,
+    multiline = false,
+    rows = 3,
     ...props
 }, ref) => {
     // Stable unique ID — no random on re-render
@@ -60,6 +62,8 @@ const Input = React.forwardRef(({
         );
     }
 
+    const Component = multiline ? "textarea" : "input";
+
     return (
         <div className="space-y-1.5">
             {/* Label */}
@@ -81,23 +85,25 @@ const Input = React.forwardRef(({
 
             {/* Input wrapper (allows prefix/suffix icons) */}
             <div className="relative">
-                {prefix && (
+                {prefix && !multiline && (
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
                         {prefix}
                     </div>
                 )}
 
-                <input
-                    type={type}
+                <Component
+                    type={!multiline ? type : undefined}
                     ref={ref}
                     id={inputId}
                     aria-required={required}
                     aria-invalid={hasError}
                     aria-describedby={cn(hasError && errId, description && hintId) || undefined}
+                    rows={multiline ? rows : undefined}
                     className={cn(
                         "input-base",
-                        prefix && "pl-9",
-                        suffix && "pr-9",
+                        multiline && "min-h-[80px] py-3 resize-y",
+                        prefix && !multiline && "pl-9",
+                        suffix && !multiline && "pr-9",
                         hasError && "input-error",
                         hasSuccess && "border-success focus-visible:ring-success/30",
                         className

@@ -42,11 +42,12 @@ export const updateUserProfile = createAsyncThunk(
   'userProfile/updateUserProfile',
   async (profileData, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      const response = await axios.put('/api/user/profile', profileData, {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      });
-      return response.data;
+      // const { auth } = getState();
+      // const response = await axios.put('/api/user/profile', profileData, {
+      //   headers: { Authorization: `Bearer ${auth.token}` }
+      // });
+      await new Promise(r => setTimeout(r, 400));
+      return Object.fromEntries(profileData instanceof FormData ? profileData.entries() : Object.entries(profileData));
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
     }
@@ -57,11 +58,12 @@ export const updateUserPreferences = createAsyncThunk(
   'userProfile/updateUserPreferences',
   async (preferences, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      const response = await axios.put('/api/user/preferences', preferences, {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      });
-      return response.data;
+      // const { auth } = getState();
+      // const response = await axios.put('/api/user/preferences', preferences, {
+      //   headers: { Authorization: `Bearer ${auth.token}` }
+      // });
+      await new Promise(r => setTimeout(r, 400));
+      return preferences;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update preferences');
     }
@@ -72,17 +74,18 @@ export const uploadProfileImage = createAsyncThunk(
   'userProfile/uploadProfileImage',
   async (imageFile, { rejectWithValue, getState }) => {
     try {
-      const { auth } = getState();
-      const formData = new FormData();
-      formData.append('profileImage', imageFile);
+      // const { auth } = getState();
+      // const formData = new FormData();
+      // formData.append('profileImage', imageFile);
 
-      const response = await axios.post('/api/user/profile-image', formData, {
-        headers: {
-          Authorization: `Bearer ${auth.token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      return response.data;
+      // const response = await axios.post('/api/user/profile-image', formData, {
+      //   headers: {
+      //     Authorization: `Bearer ${auth.token}`,
+      //     'Content-Type': 'multipart/form-data'
+      //   }
+      // });
+      await new Promise(r => setTimeout(r, 600));
+      return { avatar: URL.createObjectURL(imageFile) };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to upload image');
     }
