@@ -65,10 +65,6 @@ const Layout = ({ children, showSidebar = true, showHeader = true }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) dispatch(verifyToken());
-  }, [dispatch, isAuthenticated]);
-
-  useEffect(() => {
     const handle = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
