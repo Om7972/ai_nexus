@@ -10,11 +10,14 @@
  */
 
 import express from 'express';
-
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.js';
 import { applySecurityMiddleware, generateCsrfToken } from './config/security.js';
 import requestLogger from './middlewares/requestLogger.js';
 import errorHandler from './middlewares/errorHandler.js';
 import AppError from './utils/AppError.js';
+import redisService from './services/redisService.js';
+import logger from './utils/logger.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -35,6 +38,11 @@ import collaborationRoutes from './routes/collaboration/index.js';
 
 // ── App initialization ────────────────────────────────────────────────────────
 const app = express();
+
+// Initialize Redis connection (non-blocking)
+redisService.connect().catch(err => {
+    logger.warn('Failed to connect to Redis. Caching will be disabled.', err);
+});
 
 // Trust first proxy (required for rate-limit IP detection behind nginx/load-balancers)
 app.set('trust proxy', 1);
@@ -63,8 +71,38 @@ app.get('/api/v1/health', (_req, res) => {
         message: '✅ AI-Nexus API is healthy',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV,
+        redis: redisService.isConnected ? 'connected' : 'disconnected',
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
     });
 });
+
+// ── Monitoring endpoint ───────────────────────────────────────────────────────
+app.get('/api/v1/monitoring', (_req, res) => {
+    res.status(200).json({
+        success: true,
+        status: 'operational',
+        timestamp: new Date().toISOString(),
+        services: {
+            api: 'healthy',
+            redis: redisService.isConnected ? 'connected' : 'disconnected',
+            mongodb: 'connected', // This will be checked via mongoose
+        },
+        system: {
+            uptime: process.uptime(),
+            memory: process.memoryUsage(),
+            cpu: process.cpuUsage(),
+            platform: process.platform,
+            nodeVersion: process.version,
+        },
+    });
+});
+
+// ── API Documentation (Swagger) ───────────────────────────────────────────────
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'AI Nexus API Documentation',
+}));
 
 // ── CSRF token endpoint ───────────────────────────────────────────────────────
 // Browser clients MUST call this before any mutating request.

@@ -84,6 +84,11 @@ const Routes = () => {
               <KnowledgeVault />
             </AuthGuard>
           } />
+          <Route path="/collaboration" element={
+            <AuthGuard requireAuth={true}>
+              <Collaboration />
+            </AuthGuard>
+          } />
           <Route path="/user-profile" element={
             <AuthGuard requireAuth={true}>
               <UserProfile />

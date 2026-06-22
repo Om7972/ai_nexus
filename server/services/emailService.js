@@ -1,168 +1,212 @@
 import nodemailer from 'nodemailer';
-import config from '../config/config.js';
 import logger from '../utils/logger.js';
 
-// ── Transporter factory ───────────────────────────────────────────────────────
+class EmailService {
+  constructor() {
+    this.transporter = null;
+    this.initialize();
+  }
 
-const createTransporter = () => {
-    if (process.env.NODE_ENV === 'test') {
-        // Use Ethereal (fake SMTP) in test environments
-        return nodemailer.createTransport({
-            host: 'smtp.ethereal.email',
-            port: 587,
-            auth: { user: config.email.user, pass: config.email.pass },
-        });
+  initialize() {
+    try {
+      this.transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: parseInt(process.env.EMAIL_PORT || '587'),
+        secure: process.env.EMAIL_PORT === '465', // true for 465, false for other ports
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      });
+
+      logger.info('✉️  Email service initialized');
+    } catch (error) {
+      logger.error('Failed to initialize email service:', error);
+    }
+  }
+
+  async sendEmail({ to, subject, html, text }) {
+    if (!this.transporter) {
+      logger.warn('Email service not configured. Skipping email send.');
+      return { success: false, message: 'Email service not configured' };
     }
 
-    return nodemailer.createTransport({
-        host: config.email.host,
-        port: config.email.port,
-        secure: config.email.port === 465,
-        auth: {
-            user: config.email.user,
-            pass: config.email.pass,
-        },
-    });
-};
-
-// ── Base send function ────────────────────────────────────────────────────────
-
-/**
- * @param {{ to: string, subject: string, html: string, text?: string }} options
- */
-const sendEmail = async ({ to, subject, html, text }) => {
-    const transporter = createTransporter();
-
-    const mailOptions = {
-        from: config.email.from,
+    try {
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || 'AI Nexus <noreply@ainexus.com>',
         to,
         subject,
         html,
-        text: text || html.replace(/<[^>]+>/g, ''), // auto-generate plain text
-    };
+        text: text || this.stripHtml(html),
+      };
 
-    try {
-        const info = await transporter.sendMail(mailOptions);
-        logger.info(`📧 Email sent to ${to} → MessageId: ${info.messageId}`);
-
-        // Log Ethereal preview URL in development
-        if (process.env.NODE_ENV !== 'production') {
-            const previewUrl = nodemailer.getTestMessageUrl(info);
-            if (previewUrl) logger.info(`📬 Preview: ${previewUrl}`);
-        }
-
-        return info;
-    } catch (err) {
-        logger.error(`❌ Failed to send email to ${to}: ${err.message}`);
-        throw err;
+      const info = await this.transporter.sendMail(mailOptions);
+      
+      logger.info(`✉️  Email sent successfully to ${to}:`, info.messageId);
+      
+      return {
+        success: true,
+        messageId: info.messageId,
+        message: 'Email sent successfully',
+      };
+    } catch (error) {
+      logger.error(`Failed to send email to ${to}:`, error);
+      return {
+        success: false,
+        error: error.message,
+        message: 'Failed to send email',
+      };
     }
-};
+  }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// Email Templates
-// ══════════════════════════════════════════════════════════════════════════════
+  async sendWelcomeEmail(user) {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+          .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🚀 Welcome to AI Nexus!</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${user.name},</p>
+            <p>Welcome to AI Nexus - your intelligent platform for AI-powered collaboration and productivity!</p>
+            <p>We're excited to have you on board. Here's what you can do:</p>
+            <ul>
+              <li>🤖 Access powerful AI models</li>
+              <li>📝 Build custom AI workflows</li>
+              <li>🤝 Collaborate in real-time</li>
+              <li>📚 Create your knowledge vault</li>
+              <li>🎨 Generate AI-powered content</li>
+            </ul>
+            <p>Get started now and explore all the amazing features!</p>
+            <a href="${process.env.FRONTEND_URL}/main-dashboard" class="button">Go to Dashboard</a>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} AI Nexus. All rights reserved.</p>
+            <p>If you didn't sign up for this account, please ignore this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
 
-const baseLayout = (content) => `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI-Nexus</title>
-  <style>
-    body { margin: 0; padding: 0; background-color: #0f0f1a; font-family: 'Segoe UI', Arial, sans-serif; color: #e2e8f0; }
-    .wrapper { max-width: 580px; margin: 40px auto; background: #1a1a2e; border-radius: 16px; overflow: hidden; border: 1px solid #2d2d4e; }
-    .header { background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 32px 40px; text-align: center; }
-    .header h1 { margin: 0; font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
-    .header p { margin: 6px 0 0; font-size: 13px; color: rgba(255,255,255,0.75); }
-    .body { padding: 40px; }
-    .body p { line-height: 1.7; color: #cbd5e1; font-size: 15px; margin: 0 0 16px; }
-    .btn { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 15px; margin: 16px 0; }
-    .note { background: #12122a; border-left: 3px solid #6366f1; padding: 12px 16px; border-radius: 6px; font-size: 13px; color: #94a3b8; margin-top: 24px; }
-    .footer { text-align: center; padding: 24px 40px; font-size: 12px; color: #475569; border-top: 1px solid #2d2d4e; }
-  </style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="header">
-      <h1>⚡ AI-Nexus</h1>
-      <p>Your AI-powered platform</p>
-    </div>
-    <div class="body">${content}</div>
-    <div class="footer">
-      © ${new Date().getFullYear()} AI-Nexus. All rights reserved.<br/>
-      If you did not request this email, please ignore it.
-    </div>
-  </div>
-</body>
-</html>
-`;
-
-// ── Specific email senders ────────────────────────────────────────────────────
-
-/**
- * Send email verification link.
- * @param {{ name: string, email: string, token: string }} user
- */
-export const sendVerificationEmail = async ({ name, email, token }) => {
-    const verifyUrl = `${config.clientUrl}/verify-email?token=${token}`;
-
-    await sendEmail({
-        to: email,
-        subject: '✅ Verify your AI-Nexus email address',
-        html: baseLayout(`
-      <p>Hi <strong>${name}</strong>,</p>
-      <p>Welcome to <strong>AI-Nexus</strong>! Please verify your email address to activate your account.</p>
-      <p style="text-align:center;">
-        <a href="${verifyUrl}" class="btn">Verify Email Address</a>
-      </p>
-      <div class="note">
-        This link expires in <strong>24 hours</strong>.<br/>
-        If the button doesn't work, copy and paste this URL:<br/>
-        <span style="word-break:break-all;">${verifyUrl}</span>
-      </div>
-    `),
+    return this.sendEmail({
+      to: user.email,
+      subject: '🚀 Welcome to AI Nexus!',
+      html,
     });
-};
+  }
 
-/**
- * Send password reset link.
- * @param {{ name: string, email: string, token: string }} user
- */
-export const sendPasswordResetEmail = async ({ name, email, token }) => {
-    const resetUrl = `${config.clientUrl}/reset-password?token=${token}`;
+  async sendPasswordResetEmail(user, resetToken) {
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+          .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+          .warning { background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🔐 Password Reset Request</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${user.name},</p>
+            <p>You requested to reset your password for your AI Nexus account.</p>
+            <p>Click the button below to reset your password:</p>
+            <a href="${resetUrl}" class="button">Reset Password</a>
+            <div class="warning">
+              <strong>⚠️ Important:</strong> This link will expire in 1 hour for security reasons.
+            </div>
+            <p>If you didn't request this password reset, please ignore this email and your password will remain unchanged.</p>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} AI Nexus. All rights reserved.</p>
+            <p>For security reasons, never share this email with anyone.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
 
-    await sendEmail({
-        to: email,
-        subject: '🔑 Reset your AI-Nexus password',
-        html: baseLayout(`
-      <p>Hi <strong>${name}</strong>,</p>
-      <p>We received a request to reset the password for your AI-Nexus account. Click the button below to choose a new password.</p>
-      <p style="text-align:center;">
-        <a href="${resetUrl}" class="btn">Reset Password</a>
-      </p>
-      <div class="note">
-        This link expires in <strong>10 minutes</strong>.<br/>
-        If you did not request a password reset, you can safely ignore this email.<br/>
-        If the button doesn't work, copy and paste:<br/>
-        <span style="word-break:break-all;">${resetUrl}</span>
-      </div>
-    `),
+    return this.sendEmail({
+      to: user.email,
+      subject: '🔐 Reset Your AI Nexus Password',
+      html,
     });
-};
+  }
 
-/**
- * Send password-changed confirmation.
- * @param {{ name: string, email: string }} user
- */
-export const sendPasswordChangedEmail = async ({ name, email }) => {
-    await sendEmail({
-        to: email,
-        subject: '🔒 Your AI-Nexus password was changed',
-        html: baseLayout(`
-      <p>Hi <strong>${name}</strong>,</p>
-      <p>This is a confirmation that the password for your AI-Nexus account was successfully changed.</p>
-      <p>If you did not make this change, please <a href="${config.clientUrl}/forgot-password" style="color:#818cf8;">reset your password immediately</a> or contact our support team.</p>
-    `),
+  async sendVerificationEmail(user, verificationToken) {
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+          .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>✉️ Verify Your Email</h1>
+          </div>
+          <div class="content">
+            <p>Hi ${user.name},</p>
+            <p>Thanks for signing up for AI Nexus! Please verify your email address to get started.</p>
+            <a href="${verifyUrl}" class="button">Verify Email Address</a>
+            <p style="margin-top: 20px;">Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #666;">${verifyUrl}</p>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} AI Nexus. All rights reserved.</p>
+            <p>If you didn't create this account, please ignore this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail({
+      to: user.email,
+      subject: '✉️ Verify Your AI Nexus Email',
+      html,
     });
-};
+  }
+
+  stripHtml(html) {
+    return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  }
+}
+
+// Export singleton instance
+const emailService = new EmailService();
+export default emailService;

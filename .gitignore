@@ -2,28 +2,88 @@
 .env
 .env.local
 .env.*.local
+.env.production
+.env.staging
 server/.env
 server/.env.local
 server/.env.*.local
+server/.env.production
+server/.env.staging
 
 # ── Dependencies ───────────────────────────────────────────────────────────────
 node_modules/
 package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # ── Build output ───────────────────────────────────────────────────────────────
 /build
 /dist
+/.next
+/.cache
+*.tsbuildinfo
 
 # ── Logs ──────────────────────────────────────────────────────────────────────
 logs/
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+server/logs/*.log
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+coverage/
+.nyc_output/
+*.test.js.snap
 
 # ── OS / Editor ───────────────────────────────────────────────────────────────
 .DS_Store
 .idea/
 .vscode/
 Thumbs.db
+*.swp
+*.swo
+*~
 
 # ── Vite ──────────────────────────────────────────────────────────────────────
 vite.config.*s.*
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── Uploads / Temp ────────────────────────────────────────────────────────────
+server/uploads/*
+!server/uploads/.gitkeep
+temp/
+tmp/
+*.tmp
+
+# ── Cloudinary / External Services ───────────────────────────────────────────
+.cloudinary
+
+# ── SSL / Certificates ────────────────────────────────────────────────────────
+*.pem
+*.key
+*.crt
+*.cert
+nginx/ssl/*
+!nginx/ssl/.gitkeep
+
+# ── CI/CD Secrets ─────────────────────────────────────────────────────────────
+.vercel
+.netlify
+.railway
+
+# ── Database ──────────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+.cache/
+*.bak
+*.backup
+.env.backup
