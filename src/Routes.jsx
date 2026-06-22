@@ -11,6 +11,7 @@ import UserRegistration from './pages/user-registration';
 import TextStudio from './pages/text-studio';
 import AgentBuilder from './pages/agent-builder';
 import WorkflowsList from './pages/workflows-list';
+import KnowledgeVault from './pages/knowledge-vault';
 
 // New Individual Account/Settings Pages
 import UserProfile from './pages/user-profile';
@@ -75,6 +76,11 @@ const Routes = () => {
           <Route path="/workflows" element={
             <AuthGuard requireAuth={true}>
               <WorkflowsList />
+            </AuthGuard>
+          } />
+          <Route path="/knowledge-vault" element={
+            <AuthGuard requireAuth={true}>
+              <KnowledgeVault />
             </AuthGuard>
           } />
           <Route path="/user-profile" element={

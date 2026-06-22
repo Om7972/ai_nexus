@@ -30,6 +30,7 @@ import workspaceRoutes from './routes/workspaceRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import workflowRoutes from './routes/workflowRoutes.js';
+import knowledgeRoutes from './routes/knowledgeRoutes.js';
 
 // ── App initialization ────────────────────────────────────────────────────────
 const app = express();
@@ -82,6 +83,7 @@ app.use('/api/v1/workspaces', workspaceRoutes);
 app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1/workflows', workflowRoutes);
+app.use('/api/v1/knowledge', knowledgeRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. 404 HANDLER  (catch-all – must be after all routes)

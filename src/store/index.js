@@ -8,6 +8,7 @@ import textStudioReducer from './slices/textStudioSlice';
 import imageLabReducer from './slices/imageLabSlice';
 import analyticsReducer from './slices/analyticsSlice';
 import workflowReducer from './slices/workflowSlice';
+import knowledgeReducer from './slices/knowledgeSlice';
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     imageLab: imageLabReducer,
     analytics: analyticsReducer,
     workflow: workflowReducer,
+    knowledge: knowledgeReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
