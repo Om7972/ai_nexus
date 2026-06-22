@@ -4,7 +4,7 @@
  * Responsibilities:
  *  1. Load environment variables (dotenv).
  *  2. Connect to MongoDB.
- *  3. Start the HTTP server.
+ *  3. Start the HTTP server with Socket.IO support.
  *  4. Handle uncaught exceptions & unhandled promise rejections.
  */
 
@@ -16,10 +16,12 @@ import 'dotenv/config';
 import validateEnv from './config/env.js';
 validateEnv();
 
+import { createServer } from 'http';
 import app from './app.js';
 import connectDB from './config/db.js';
 import config from './config/config.js';
 import logger from './utils/logger.js';
+import socketService from './services/socketService.js';
 
 
 // ── Handle synchronous uncaught exceptions ────────────────────────────────────
@@ -33,9 +35,14 @@ process.on('uncaughtException', (err) => {
 (async () => {
     await connectDB();
 
-    const server = app.listen(config.port, () => {
+    // Create HTTP server and initialize Socket.IO
+    const httpServer = createServer(app);
+    socketService.initialize(httpServer);
+
+    const server = httpServer.listen(config.port, () => {
         logger.info(`🚀 Server running in ${config.env} mode on port ${config.port}`);
         logger.info(`📡 API: http://localhost:${config.port}/api/v1`);
+        logger.info(`🔌 Socket.IO initialized for real-time collaboration`);
     });
 
     // ── Handle unhandled promise rejections ───────────────────────────────────

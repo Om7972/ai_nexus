@@ -12,6 +12,7 @@ import TextStudio from './pages/text-studio';
 import AgentBuilder from './pages/agent-builder';
 import WorkflowsList from './pages/workflows-list';
 import KnowledgeVault from './pages/knowledge-vault';
+import Collaboration from './pages/collaboration';
 
 // New Individual Account/Settings Pages
 import UserProfile from './pages/user-profile';

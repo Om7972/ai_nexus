@@ -9,6 +9,7 @@ import imageLabReducer from './slices/imageLabSlice';
 import analyticsReducer from './slices/analyticsSlice';
 import workflowReducer from './slices/workflowSlice';
 import knowledgeReducer from './slices/knowledgeSlice';
+import collaborationReducer from './slices/collaborationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     analytics: analyticsReducer,
     workflow: workflowReducer,
     knowledge: knowledgeReducer,
+    collaboration: collaborationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
