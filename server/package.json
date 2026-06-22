@@ -12,6 +12,7 @@
     "dependencies": {
         "axios": "^1.18.0",
         "bcryptjs": "^2.4.3",
+        "cloudinary": "^1.41.0",
         "cookie-parser": "^1.4.6",
         "cors": "^2.8.5",
         "csrf-csrf": "^4.0.3",
@@ -20,6 +21,7 @@
         "express-mongo-sanitize": "^2.2.0",
         "express-rate-limit": "^7.3.1",
         "helmet": "^7.1.0",
+        "ioredis": "^5.3.2",
         "jsonwebtoken": "^9.0.2",
         "lodash": "^4.18.1",
         "mammoth": "^1.12.0",
@@ -30,7 +32,10 @@
         "pdf-parse": "^2.4.5",
         "socket.io": "^4.8.3",
         "socket.io-client": "^4.8.3",
+        "swagger-jsdoc": "^6.2.8",
+        "swagger-ui-express": "^5.0.0",
         "winston": "^3.19.0",
+        "winston-daily-rotate-file": "^5.0.0",
         "zod": "^3.23.8"
     },
     "devDependencies": {
