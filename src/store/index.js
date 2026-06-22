@@ -7,6 +7,7 @@ import searchReducer from './slices/searchSlice';
 import textStudioReducer from './slices/textStudioSlice';
 import imageLabReducer from './slices/imageLabSlice';
 import analyticsReducer from './slices/analyticsSlice';
+import workflowReducer from './slices/workflowSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ export const store = configureStore({
     textStudio: textStudioReducer,
     imageLab: imageLabReducer,
     analytics: analyticsReducer,
+    workflow: workflowReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

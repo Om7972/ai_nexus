@@ -9,6 +9,8 @@ import MainDashboard from './pages/main-dashboard';
 import AIImageProcessingLab from './pages/ai-image-processing-lab';
 import UserRegistration from './pages/user-registration';
 import TextStudio from './pages/text-studio';
+import AgentBuilder from './pages/agent-builder';
+import WorkflowsList from './pages/workflows-list';
 
 // New Individual Account/Settings Pages
 import UserProfile from './pages/user-profile';
@@ -63,6 +65,16 @@ const Routes = () => {
           <Route path="/text-studio" element={
             <AuthGuard requireAuth={true}>
               <TextStudio />
+            </AuthGuard>
+          } />
+          <Route path="/agent-builder" element={
+            <AuthGuard requireAuth={true}>
+              <AgentBuilder />
+            </AuthGuard>
+          } />
+          <Route path="/workflows" element={
+            <AuthGuard requireAuth={true}>
+              <WorkflowsList />
             </AuthGuard>
           } />
           <Route path="/user-profile" element={
