@@ -13,8 +13,8 @@ import TeamSelector from '../components/collaboration/TeamSelector';
 import ProjectList from '../components/collaboration/ProjectList';
 import DocumentEditor from '../components/collaboration/DocumentEditor';
 import ActivityFeed from '../components/collaboration/ActivityFeed';
-import Sidebar from '../components/Sidebar';
-import Navigation from '../components/Navigation';
+import Sidebar from '../components/ui/Sidebar';
+import Header from '../components/ui/Header';
 import {
   FiUsers,
   FiFolderPlus,
@@ -25,7 +25,7 @@ import {
 
 const Collaboration = () => {
   const dispatch = useDispatch();
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showActivityFeed, setShowActivityFeed] = useState(true);
   const [activeView, setActiveView] = useState('documents'); // documents, projects, teams
 
@@ -76,23 +76,13 @@ const Collaboration = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-      <Navigation />
+      <Header />
+      <Sidebar
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
       
-      <div className="flex h-[calc(100vh-4rem)]">
-        {/* Sidebar */}
-        <AnimatePresence>
-          {showSidebar && (
-            <motion.div
-              initial={{ x: -300, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -300, opacity: 0 }}
-              className="w-20"
-            >
-              <Sidebar />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+      <div className={`flex h-[calc(100vh-4rem)] transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Left Panel - Teams/Projects/Documents */}

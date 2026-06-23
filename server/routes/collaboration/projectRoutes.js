@@ -9,7 +9,7 @@ import {
   removeProjectMember,
   updateProjectMemberRole,
   getProjectActivities
-} from '../../controllers/projectController.js';
+} from '../../controllers/collaborationProjectController.js';
 import { protect } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();

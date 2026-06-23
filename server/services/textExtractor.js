@@ -1,7 +1,23 @@
 import fs from 'fs/promises';
-import pdf from 'pdf-parse';
+import { PDFParse } from 'pdf-parse';
 import mammoth from 'mammoth';
 import Papa from 'papaparse';
+
+async function parsePDF(dataBuffer) {
+  const parser = new PDFParse({ data: dataBuffer });
+  try {
+    const infoResult = await parser.getInfo();
+    const textResult = await parser.getText();
+    return {
+      text: textResult.text,
+      numpages: infoResult.total,
+      info: infoResult.info,
+      metadata: infoResult.metadata,
+    };
+  } finally {
+    await parser.destroy();
+  }
+}
 
 /**
  * Extract text from different file types
@@ -13,7 +29,7 @@ export class TextExtractor {
   static async extractFromPDF(filePath) {
     try {
       const dataBuffer = await fs.readFile(filePath);
-      const data = await pdf(dataBuffer);
+      const data = await parsePDF(dataBuffer);
 
       return {
         text: data.text,

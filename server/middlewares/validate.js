@@ -10,7 +10,7 @@ import AppError from '../utils/AppError.js';
  *
  * Validates req.body (extend to params/query as needed).
  */
-const validate = (schema) => (req, res, next) => {
+export const validate = (schema) => (req, res, next) => {
     try {
         req.body = schema.parse(req.body); // mutates body with parsed/coerced data
         next();
@@ -19,7 +19,7 @@ const validate = (schema) => (req, res, next) => {
             const errors = err.errors.map((e) => ({
                 field: e.path.join('.'),
                 message: e.message,
-            }));
+                }));
             return next(new AppError('Validation failed', 422, errors));
         }
         next(err);

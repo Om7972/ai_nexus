@@ -8,6 +8,10 @@ class RedisService {
   }
 
   async connect() {
+    if (process.env.USE_REDIS !== 'true') {
+      logger.info('ℹ️ Redis connection is disabled');
+      return null;
+    }
     try {
       const redisConfig = {
         host: process.env.REDIS_HOST || 'localhost',
