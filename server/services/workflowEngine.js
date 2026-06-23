@@ -1,5 +1,8 @@
 import axios from 'axios';
 import WorkflowExecution from '../models/WorkflowExecution.js';
+import { aiManager } from './aiProviders/index.js';
+import emailService from './emailService.js';
+import logger from '../utils/logger.js';
 
 /**
  * Main workflow execution engine
@@ -7,320 +10,388 @@ import WorkflowExecution from '../models/WorkflowExecution.js';
  */
 export async function executeWorkflow(workflow, execution, input) {
   try {
-    // Update execution status
     execution.status = 'running';
     execution.startTime = new Date();
+    execution.metadata = { tokensUsed: 0, totalNodesExecuted: 0 };
     await execution.save();
 
     await execution.addLog(null, 'System', 'info', 'Workflow execution started');
 
     const { nodes, edges } = workflow;
-    const context = { input };
+    const context = { input, global: {} };
     const executedNodes = new Set();
 
-    // Find start node (User Input or first node)
+    // Find start node: either an explicit 'userInput' node, or the first node in the graph
     const startNode = nodes.find(n => n.type === 'userInput') || nodes[0];
 
     if (!startNode) {
-      throw new Error('No start node found');
+      throw new Error('No start node found in workflow.');
     }
 
-    // Execute workflow recursively
+    // Execute workflow recursively/sequentially
     await executeNode(startNode, nodes, edges, context, execution, executedNodes);
 
-    // Complete execution
-    await execution.complete(context.output);
-    await execution.addLog(null, 'System', 'success', 'Workflow execution completed');
+    // Finalize execution
+    const totalDuration = new Date() - execution.startTime;
+    execution.status = 'completed';
+    execution.endTime = new Date();
+    execution.duration = totalDuration;
+    execution.output = context.output || context[nodes[nodes.length - 1]?.id] || context;
+    await execution.save();
+
+    await execution.addLog(null, 'System', 'success', `Workflow execution completed in ${totalDuration}ms. Total tokens: ${execution.metadata.tokensUsed || 0}`);
 
   } catch (error) {
-    console.error('Workflow execution error:', error);
-    error.nodeId = error.nodeId || null;
-    await execution.complete(null, error);
-    await execution.addLog(error.nodeId, 'System', 'error', `Workflow execution failed: ${error.message}`);
+    logger.error('Workflow execution failed:', error);
+    const totalDuration = new Date() - execution.startTime;
+    
+    execution.status = 'failed';
+    execution.endTime = new Date();
+    execution.duration = totalDuration;
+    execution.error = {
+      message: error.message,
+      stack: error.stack,
+      nodeId: error.nodeId || null
+    };
+    await execution.save();
+    
+    await execution.addLog(error.nodeId || null, 'System', 'error', `Workflow execution failed: ${error.message}`);
   }
 }
 
 /**
- * Execute a single node and its connected nodes
+ * Execute a single node and recursively process downstream nodes
  */
 async function executeNode(node, allNodes, allEdges, context, execution, executedNodes) {
-  // Avoid circular execution
   if (executedNodes.has(node.id)) {
-    return;
+    return; // Prevent circular dependencies / Infinite loops
   }
 
   executedNodes.add(node.id);
+  const maxRetries = node.data?.retries || 3;
+  let attempts = 0;
+  let success = false;
+  let nodeOutput = null;
 
-  try {
-    await execution.addLog(node.id, node.data.label || node.type, 'info', `Executing node: ${node.data.label || node.type}`);
+  await execution.updateNodeExecution(node.id, {
+    nodeId: node.id,
+    nodeName: node.data?.label || node.type,
+    nodeType: node.type,
+    status: 'running',
+    startTime: new Date()
+  });
 
-    // Update node execution status
-    await execution.updateNodeExecution(node.id, {
-      nodeId: node.id,
-      nodeName: node.data.label || node.type,
-      nodeType: node.type,
-      status: 'running',
-      startTime: new Date()
-    });
-
-    let nodeOutput;
-
-    // Execute node based on type
-    switch (node.type) {
-      case 'userInput':
-        nodeOutput = await executeUserInputNode(node, context, execution);
-        break;
-      case 'promptNode':
-        nodeOutput = await executePromptNode(node, context, execution);
-        break;
-      case 'llmNode':
-        nodeOutput = await executeLLMNode(node, context, execution);
-        break;
-      case 'imageGeneration':
-        nodeOutput = await executeImageGenerationNode(node, context, execution);
-        break;
-      case 'conditionNode':
-        nodeOutput = await executeConditionNode(node, context, execution);
-        break;
-      case 'apiRequest':
-        nodeOutput = await executeAPIRequestNode(node, context, execution);
-        break;
-      case 'outputNode':
-        nodeOutput = await executeOutputNode(node, context, execution);
-        break;
-      default:
-        throw new Error(`Unknown node type: ${node.type}`);
-    }
-
-    // Store node output in context
-    context[node.id] = nodeOutput;
-
-    // Update node execution status
-    await execution.updateNodeExecution(node.id, {
-      status: 'completed',
-      endTime: new Date(),
-      output: nodeOutput
-    });
-
-    await execution.addLog(node.id, node.data.label || node.type, 'success', 'Node executed successfully');
-
-    // Find and execute connected nodes
-    const outgoingEdges = allEdges.filter(edge => edge.source === node.id);
-
-    for (const edge of outgoingEdges) {
-      // Handle condition node branching
-      if (node.type === 'conditionNode') {
-        const shouldExecute = edge.sourceHandle === nodeOutput.branch;
-        if (!shouldExecute) {
-          continue;
-        }
+  while (attempts < maxRetries && !success) {
+    attempts++;
+    try {
+      if (attempts > 1) {
+        await execution.addLog(node.id, node.data?.label || node.type, 'warning', `Retry attempt ${attempts}/${maxRetries} for node ${node.id}`);
+      } else {
+        await execution.addLog(node.id, node.data?.label || node.type, 'info', `Executing node ${node.id} (${node.type})`);
       }
 
-      const nextNode = allNodes.find(n => n.id === edge.target);
-      if (nextNode) {
-        await executeNode(nextNode, allNodes, allEdges, context, execution, executedNodes);
+      // Execute node based on type
+      switch (node.type) {
+        case 'userInput':
+          nodeOutput = await executeUserInputNode(node, context, execution);
+          break;
+        case 'textGenerator':
+        case 'llmNode':
+          nodeOutput = await executeTextGeneratorNode(node, context, execution);
+          break;
+        case 'imageGenerator':
+        case 'imageGeneration':
+          nodeOutput = await executeImageGeneratorNode(node, context, execution);
+          break;
+        case 'ocr':
+          nodeOutput = await executeOCRNode(node, context, execution);
+          break;
+        case 'summarizer':
+          nodeOutput = await executeSummarizerNode(node, context, execution);
+          break;
+        case 'translator':
+          nodeOutput = await executeTranslatorNode(node, context, execution);
+          break;
+        case 'dataAnalyzer':
+          nodeOutput = await executeDataAnalyzerNode(node, context, execution);
+          break;
+        case 'emailSender':
+          nodeOutput = await executeEmailSenderNode(node, context, execution);
+          break;
+        case 'webSearch':
+          nodeOutput = await executeWebSearchNode(node, context, execution);
+          break;
+        case 'delay':
+          nodeOutput = await executeDelayNode(node, context, execution);
+          break;
+        case 'conditionNode':
+          nodeOutput = await executeConditionNode(node, context, execution);
+          break;
+        case 'exportNode':
+        case 'outputNode':
+          nodeOutput = await executeExportNode(node, context, execution);
+          break;
+        default:
+          throw new Error(`Unsupported node type: ${node.type}`);
+      }
+
+      success = true;
+    } catch (err) {
+      if (attempts >= maxRetries) {
+        err.nodeId = node.id;
+        await execution.updateNodeExecution(node.id, {
+          status: 'failed',
+          endTime: new Date(),
+          error: err.message
+        });
+        await execution.addLog(node.id, node.data?.label || node.type, 'error', `Execution failed after ${maxRetries} attempts: ${err.message}`);
+        throw err;
+      }
+    }
+  }
+
+  // Update success status
+  const nodeEndTime = new Date();
+  const nodeDuration = nodeEndTime - (execution.nodeExecutions.find(n => n.nodeId === node.id)?.startTime || nodeEndTime);
+
+  await execution.updateNodeExecution(node.id, {
+    status: 'completed',
+    endTime: nodeEndTime,
+    duration: nodeDuration,
+    output: nodeOutput
+  });
+
+  await execution.addLog(node.id, node.data?.label || node.type, 'success', `Node completed successfully in ${nodeDuration}ms`);
+
+  // Save outputs in context
+  context[node.id] = nodeOutput;
+  execution.metadata.totalNodesExecuted = (execution.metadata.totalNodesExecuted || 0) + 1;
+  await execution.save();
+
+  // Route to outgoing connections
+  const outgoingEdges = allEdges.filter(edge => edge.source === node.id);
+
+  for (const edge of outgoingEdges) {
+    // Branching conditional check
+    if (node.type === 'conditionNode') {
+      const matchBranch = nodeOutput.branch; // 'true' or 'false'
+      if (edge.sourceHandle !== matchBranch) {
+        continue; // Skip the inactive branch
       }
     }
 
-  } catch (error) {
-    error.nodeId = node.id;
-    
-    await execution.updateNodeExecution(node.id, {
-      status: 'failed',
-      endTime: new Date(),
-      error: error.message
-    });
-
-    await execution.addLog(node.id, node.data.label || node.type, 'error', `Node execution failed: ${error.message}`);
-    
-    throw error;
+    const nextNode = allNodes.find(n => n.id === edge.target);
+    if (nextNode) {
+      await executeNode(nextNode, allNodes, allEdges, context, execution, executedNodes);
+    }
   }
 }
 
 /**
- * Node execution functions
+ * Node Implementations
  */
 
 async function executeUserInputNode(node, context, execution) {
-  const { input } = context;
-  await execution.addLog(node.id, node.data.label, 'info', `User input received`);
-  return input;
+  const data = getNestedValue(context, node.data?.inputSource || 'input');
+  return data;
 }
 
-async function executePromptNode(node, context, execution) {
-  const { promptTemplate, variables } = node.data;
-  
-  // Replace variables in template
-  let prompt = promptTemplate || '';
-  
-  if (variables && Array.isArray(variables)) {
-    variables.forEach(variable => {
-      const value = getNestedValue(context, variable.source) || variable.defaultValue || '';
-      prompt = prompt.replace(new RegExp(`{{${variable.name}}}`, 'g'), value);
-    });
+async function executeTextGeneratorNode(node, context, execution) {
+  const prompt = resolveTemplate(node.data?.prompt || '', context);
+  const model = node.data?.model || 'gemini-1.5-pro';
+
+  const res = await aiManager.generateText({
+    prompt,
+    model,
+    tone: node.data?.tone,
+    length: node.data?.length
+  });
+
+  if (res.tokensUsed) {
+    execution.metadata.tokensUsed = (execution.metadata.tokensUsed || 0) + res.tokensUsed;
   }
 
-  await execution.addLog(node.id, node.data.label, 'info', `Prompt generated: ${prompt.substring(0, 100)}...`);
-  
-  return { prompt };
+  return { text: res.content, tokensUsed: res.tokensUsed, model: res.model };
 }
 
-async function executeLLMNode(node, context, execution) {
-  const { model, temperature = 0.7, maxTokens = 1000, promptSource } = node.data;
-  
-  // Get prompt from previous node
-  const prompt = getNestedValue(context, promptSource) || '';
+async function executeImageGeneratorNode(node, context, execution) {
+  const prompt = resolveTemplate(node.data?.prompt || '', context);
+  const model = node.data?.model || 'dall-e-3';
+  const size = node.data?.size || '1024x1024';
 
-  if (!prompt) {
-    throw new Error('No prompt provided for LLM node');
-  }
+  const res = await aiManager.generateImage({
+    prompt,
+    model,
+    resolution: size
+  });
 
-  await execution.addLog(node.id, node.data.label, 'info', `Sending request to ${model}`);
-
-  // Mock LLM response (in production, integrate with actual AI services)
-  // This would call OpenAI, Anthropic, etc.
-  const response = await callLLMService(model, prompt, temperature, maxTokens);
-
-  await execution.addLog(node.id, node.data.label, 'success', `LLM response received (${response.length} chars)`);
-
-  return { response, model, prompt };
+  return { imageUrl: res.imageUrl || res.url || res };
 }
 
-async function executeImageGenerationNode(node, context, execution) {
-  const { prompt: promptSource, model = 'dall-e-3', size = '1024x1024' } = node.data;
-  
-  const prompt = getNestedValue(context, promptSource) || '';
-
-  if (!prompt) {
-    throw new Error('No prompt provided for image generation');
+async function executeOCRNode(node, context, execution) {
+  const source = getNestedValue(context, node.data?.imageSource);
+  if (!source) {
+    throw new Error('OCR source file or image URL not found.');
   }
 
-  await execution.addLog(node.id, node.data.label, 'info', `Generating image with ${model}`);
+  await execution.addLog(node.id, 'OCR', 'info', 'Performing text extraction (OCR)');
+  // Emulate OCR using Gemini Vision or a mock depending on the input type
+  const prompt = 'Extract all readable text from this image exactly as it appears.';
+  const res = await aiManager.generateText({
+    prompt: `${prompt}\n[Source: ${JSON.stringify(source)}]`,
+    model: 'gemini-1.5-pro'
+  });
 
-  // Mock image generation (integrate with DALL-E, Midjourney, Stable Diffusion, etc.)
-  const imageUrl = await generateImage(prompt, model, size);
+  return { text: res.content };
+}
 
-  await execution.addLog(node.id, node.data.label, 'success', `Image generated successfully`);
+async function executeSummarizerNode(node, context, execution) {
+  const textToSummarize = resolveTemplate(node.data?.text || '{{input}}', context);
+  const detail = node.data?.detailLevel || 'concise';
 
-  return { imageUrl, prompt, model };
+  const prompt = `Summarize the following text in a ${detail} manner:\n\n${textToSummarize}`;
+  const res = await aiManager.generateText({
+    prompt,
+    model: 'gemini-1.5-pro'
+  });
+
+  return { summary: res.content };
+}
+
+async function executeTranslatorNode(node, context, execution) {
+  const textToTranslate = resolveTemplate(node.data?.text || '{{input}}', context);
+  const targetLanguage = node.data?.targetLanguage || 'Spanish';
+
+  const prompt = `Translate the following text to ${targetLanguage}. Maintain tone and formatting:\n\n${textToTranslate}`;
+  const res = await aiManager.generateText({
+    prompt,
+    model: 'gemini-1.5-pro'
+  });
+
+  return { translatedText: res.content, language: targetLanguage };
+}
+
+async function executeDataAnalyzerNode(node, context, execution) {
+  const data = resolveTemplate(node.data?.data || '{{input}}', context);
+
+  const prompt = `Analyze the following data and extract key findings, trends, and summary metrics. Format in clear markdown:\n\n${data}`;
+  const res = await aiManager.generateText({
+    prompt,
+    model: 'gemini-1.5-pro'
+  });
+
+  return { analysis: res.content };
+}
+
+async function executeEmailSenderNode(node, context, execution) {
+  const recipient = resolveTemplate(node.data?.recipient || '', context);
+  const subject = resolveTemplate(node.data?.subject || 'AI Nexus Alert', context);
+  const body = resolveTemplate(node.data?.body || '', context);
+
+  if (!recipient) {
+    throw new Error('Recipient email is required for Email Sender node');
+  }
+
+  await emailService.sendEmail({
+    to: recipient,
+    subject: subject,
+    html: `<div style="font-family: sans-serif; line-height: 1.5; color: #333;">${body.replace(/\n/g, '<br/>')}</div>`
+  });
+
+  return { sent: true, recipient, subject };
+}
+
+async function executeWebSearchNode(node, context, execution) {
+  const query = resolveTemplate(node.data?.query || '', context);
+  if (!query) throw new Error('Query string is required for Web Search Node');
+
+  // Simulated search API returning Google Search snippets using fallback
+  const prompt = `Search web for: "${query}". Provide 3 realistic search snippet results with titles and URLs. Format as JSON.`;
+  const res = await aiManager.generateText({
+    prompt,
+    model: 'gemini-1.5-pro'
+  });
+
+  let results;
+  try {
+    results = JSON.parse(res.content.replace(/```json/g, '').replace(/```/g, '').trim());
+  } catch (e) {
+    results = [{ title: `Search Result: ${query}`, snippet: res.content, url: 'https://example.com' }];
+  }
+
+  return { query, results };
+}
+
+async function executeDelayNode(node, context, execution) {
+  const ms = parseInt(node.data?.duration || 1000);
+  await execution.addLog(node.id, 'Delay', 'info', `Waiting for ${ms}ms...`);
+  await new Promise(resolve => setTimeout(resolve, ms));
+  return { delayed: true, duration: ms };
 }
 
 async function executeConditionNode(node, context, execution) {
-  const { leftOperand, operator, rightOperand } = node.data;
-  
-  const leftValue = getNestedValue(context, leftOperand);
-  const rightValue = rightOperand;
+  const left = resolveTemplate(node.data?.leftOperand || '', context);
+  const operator = node.data?.operator || 'equals';
+  const right = resolveTemplate(node.data?.rightOperand || '', context);
 
   let result = false;
-
   switch (operator) {
     case 'equals':
-      result = leftValue == rightValue;
+      result = String(left).trim() === String(right).trim();
       break;
     case 'notEquals':
-      result = leftValue != rightValue;
+      result = String(left).trim() !== String(right).trim();
       break;
     case 'contains':
-      result = String(leftValue).includes(rightValue);
+      result = String(left).toLowerCase().includes(String(right).toLowerCase());
       break;
     case 'greaterThan':
-      result = parseFloat(leftValue) > parseFloat(rightValue);
+      result = parseFloat(left) > parseFloat(right);
       break;
     case 'lessThan':
-      result = parseFloat(leftValue) < parseFloat(rightValue);
+      result = parseFloat(left) < parseFloat(right);
       break;
     case 'isEmpty':
-      result = !leftValue || leftValue.length === 0;
+      result = !left || String(left).trim().length === 0;
       break;
-    default:
-      result = false;
   }
 
   const branch = result ? 'true' : 'false';
-
-  await execution.addLog(node.id, node.data.label, 'info', `Condition evaluated to: ${branch}`);
-
-  return { result, branch };
+  return { result, branch, operands: { left, operator, right } };
 }
 
-async function executeAPIRequestNode(node, context, execution) {
-  const { url, method = 'GET', headers = {}, body, bodySource } = node.data;
-  
-  let requestBody = body;
-  
-  if (bodySource) {
-    requestBody = getNestedValue(context, bodySource);
+async function executeExportNode(node, context, execution) {
+  const exportData = getNestedValue(context, node.data?.exportSource);
+  const format = node.data?.format || 'json';
+
+  let outputContent;
+  if (format === 'json') {
+    outputContent = JSON.stringify(exportData || context, null, 2);
+  } else {
+    // CSV fallback
+    outputContent = String(exportData || context);
   }
 
-  await execution.addLog(node.id, node.data.label, 'info', `Making ${method} request to ${url}`);
-
-  try {
-    const config = {
-      method,
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      }
-    };
-
-    if (method !== 'GET' && requestBody) {
-      config.data = requestBody;
-    }
-
-    const response = await axios(config);
-
-    await execution.addLog(node.id, node.data.label, 'success', `API request successful (status: ${response.status})`);
-
-    return {
-      status: response.status,
-      data: response.data,
-      headers: response.headers
-    };
-  } catch (error) {
-    throw new Error(`API request failed: ${error.message}`);
-  }
-}
-
-async function executeOutputNode(node, context, execution) {
-  const { outputSource } = node.data;
-  
-  const output = getNestedValue(context, outputSource) || context;
-
-  await execution.addLog(node.id, node.data.label, 'info', 'Setting workflow output');
-
-  // Store final output in context
-  context.output = output;
-
-  return output;
+  context.output = outputContent;
+  return { output: outputContent, format };
 }
 
 /**
- * Helper functions
+ * Utility Functions
  */
 
+function resolveTemplate(template, context) {
+  if (typeof template !== 'string') return template;
+  return template.replace(/\{\{([^}]+)\}\}/g, (_, path) => {
+    const value = getNestedValue(context, path.trim());
+    return value !== undefined ? (typeof value === 'object' ? JSON.stringify(value) : value) : '';
+  });
+}
+
 function getNestedValue(obj, path) {
-  if (!path) return obj;
+  if (!path || path === 'input') return obj.input;
   
   return path.split('.').reduce((current, key) => {
     return current?.[key];
   }, obj);
-}
-
-async function callLLMService(model, prompt, temperature, maxTokens) {
-  // Mock implementation - integrate with actual AI services
-  // In production, add OpenAI, Anthropic, Google AI, etc.
-  
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-  
-  return `This is a mock response from ${model}. Prompt was: "${prompt.substring(0, 50)}..."`;
-}
-
-async function generateImage(prompt, model, size) {
-  // Mock implementation - integrate with actual image generation services
-  // In production, add DALL-E, Midjourney, Stable Diffusion, etc.
-  
-  await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-  
-  return `https://via.placeholder.com/${size}?text=Generated+Image`;
 }

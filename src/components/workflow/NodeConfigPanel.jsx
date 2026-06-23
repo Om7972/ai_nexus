@@ -20,184 +20,278 @@ const NodeConfigPanel = ({ node, onUpdate, onClose }) => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
-  const addVariable = () => {
-    const variables = config.variables || [];
-    handleChange('variables', [...variables, { name: '', source: '', defaultValue: '' }]);
-  };
-
-  const updateVariable = (index, field, value) => {
-    const variables = [...(config.variables || [])];
-    variables[index][field] = value;
-    handleChange('variables', variables);
-  };
-
-  const removeVariable = (index) => {
-    const variables = [...(config.variables || [])];
-    variables.splice(index, 1);
-    handleChange('variables', variables);
-  };
-
   const renderConfigFields = () => {
     switch (node.type) {
       case 'userInput':
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Input Schema</label>
-              <textarea
-                value={config.schema || ''}
-                onChange={(e) => handleChange('schema', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={4}
-                placeholder='{"type": "object", "properties": {...}}'
+              <label className="block text-sm font-medium mb-1">Input Parameter Source Key</label>
+              <input
+                type="text"
+                value={config.inputSource || 'input'}
+                onChange={(e) => handleChange('inputSource', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                placeholder="input"
               />
+              <p className="text-[10px] text-gray-400 mt-1">Specify variable path from execution input</p>
             </div>
           </div>
         );
 
-      case 'promptNode':
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Prompt Template</label>
-              <textarea
-                value={config.promptTemplate || ''}
-                onChange={(e) => handleChange('promptTemplate', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={6}
-                placeholder="Enter your prompt template here. Use {{variable}} for dynamic values."
-              />
-            </div>
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium">Variables</label>
-                <button
-                  onClick={addVariable}
-                  className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
-                >
-                  <Plus size={14} />
-                  Add Variable
-                </button>
-              </div>
-              <div className="space-y-2">
-                {(config.variables || []).map((variable, index) => (
-                  <div key={index} className="flex gap-2 p-2 bg-white/5 rounded-lg">
-                    <input
-                      type="text"
-                      value={variable.name}
-                      onChange={(e) => updateVariable(index, 'name', e.target.value)}
-                      placeholder="Name"
-                      className="flex-1 px-2 py-1 bg-white/5 border border-white/10 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                    <input
-                      type="text"
-                      value={variable.source}
-                      onChange={(e) => updateVariable(index, 'source', e.target.value)}
-                      placeholder="Source (e.g., nodeId.output)"
-                      className="flex-1 px-2 py-1 bg-white/5 border border-white/10 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    />
-                    <button
-                      onClick={() => removeVariable(index)}
-                      className="p-1 text-red-400 hover:text-red-300 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
+      case 'textGenerator':
       case 'llmNode':
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Model</label>
+              <label className="block text-sm font-medium mb-1">Prompt Template</label>
+              <textarea
+                value={config.prompt || ''}
+                onChange={(e) => handleChange('prompt', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white font-mono text-sm"
+                rows={5}
+                placeholder="Translate this: {{input}}"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Model</label>
               <select
-                value={config.model || 'gpt-4'}
+                value={config.model || 'gemini-1.5-pro'}
                 onChange={(e) => handleChange('model', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
               >
-                <option value="gpt-4">GPT-4</option>
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="claude-3-opus">Claude 3 Opus</option>
-                <option value="claude-3-sonnet">Claude 3 Sonnet</option>
-                <option value="gemini-pro">Gemini Pro</option>
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                <option value="gpt-4o">GPT-4o</option>
+                <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Tone</label>
+                <select
+                  value={config.tone || 'professional'}
+                  onChange={(e) => handleChange('tone', e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white"
+                >
+                  <option value="professional">Professional</option>
+                  <option value="casual">Casual</option>
+                  <option value="creative">Creative</option>
+                  <option value="academic">Academic</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Length</label>
+                <select
+                  value={config.length || 'medium'}
+                  onChange={(e) => handleChange('length', e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white"
+                >
+                  <option value="short">Short</option>
+                  <option value="medium">Medium</option>
+                  <option value="long">Long</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'imageGenerator':
+      case 'imageGeneration':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Prompt Template</label>
+              <textarea
+                value={config.prompt || ''}
+                onChange={(e) => handleChange('prompt', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white font-mono text-sm"
+                rows={4}
+                placeholder="High resolution image of {{userInput.topic}}"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Model</label>
+              <select
+                value={config.model || 'dall-e-3'}
+                onChange={(e) => handleChange('model', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white"
+              >
+                <option value="dall-e-3">DALL-E 3</option>
+                <option value="dall-e-2">DALL-E 2</option>
+                <option value="stable-diffusion">Stable Diffusion</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Prompt Source</label>
+              <label className="block text-sm font-medium mb-1">Resolution</label>
+              <select
+                value={config.size || '1024x1024'}
+                onChange={(e) => handleChange('size', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white"
+              >
+                <option value="1024x1024">1024x1024</option>
+                <option value="512x512">512x512</option>
+                <option value="256x256">256x256</option>
+              </select>
+            </div>
+          </div>
+        );
+
+      case 'ocr':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Image Source URI</label>
               <input
                 type="text"
-                value={config.promptSource || ''}
-                onChange={(e) => handleChange('promptSource', e.target.value)}
-                placeholder="e.g., nodeId.prompt"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Temperature: {config.temperature || 0.7}</label>
-              <input
-                type="range"
-                min="0"
-                max="2"
-                step="0.1"
-                value={config.temperature || 0.7}
-                onChange={(e) => handleChange('temperature', parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Max Tokens</label>
-              <input
-                type="number"
-                value={config.maxTokens || 1000}
-                onChange={(e) => handleChange('maxTokens', parseInt(e.target.value))}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={config.imageSource || 'input.imageUrl'}
+                onChange={(e) => handleChange('imageSource', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="e.g. input.imageUrl"
               />
             </div>
           </div>
         );
 
-      case 'imageGeneration':
+      case 'summarizer':
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Model</label>
-              <select
-                value={config.model || 'dall-e-3'}
-                onChange={(e) => handleChange('model', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="dall-e-3">DALL-E 3</option>
-                <option value="dall-e-2">DALL-E 2</option>
-                <option value="stable-diffusion">Stable Diffusion</option>
-                <option value="midjourney">Midjourney</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Prompt Source</label>
+              <label className="block text-sm font-medium mb-1">Text Source</label>
               <input
                 type="text"
-                value={config.prompt || ''}
-                onChange={(e) => handleChange('prompt', e.target.value)}
-                placeholder="e.g., nodeId.response"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={config.text || '{{input}}'}
+                onChange={(e) => handleChange('text', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="e.g. {{nodeId.text}}"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Size</label>
+              <label className="block text-sm font-medium mb-1">Detail Level</label>
               <select
-                value={config.size || '1024x1024'}
-                onChange={(e) => handleChange('size', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={config.detailLevel || 'concise'}
+                onChange={(e) => handleChange('detailLevel', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white"
               >
-                <option value="256x256">256x256</option>
-                <option value="512x512">512x512</option>
-                <option value="1024x1024">1024x1024</option>
-                <option value="1792x1024">1792x1024</option>
+                <option value="bullet-points">Bullet Points</option>
+                <option value="concise">Concise Paragraph</option>
+                <option value="detailed">Detailed Analysis</option>
               </select>
+            </div>
+          </div>
+        );
+
+      case 'translator':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Text Source</label>
+              <input
+                type="text"
+                value={config.text || '{{input}}'}
+                onChange={(e) => handleChange('text', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="e.g. {{nodeId.text}}"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Target Language</label>
+              <select
+                value={config.targetLanguage || 'Spanish'}
+                onChange={(e) => handleChange('targetLanguage', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white"
+              >
+                <option value="Spanish">Spanish</option>
+                <option value="French">French</option>
+                <option value="German">German</option>
+                <option value="Japanese">Japanese</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Hindi">Hindi</option>
+              </select>
+            </div>
+          </div>
+        );
+
+      case 'dataAnalyzer':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Data Source</label>
+              <input
+                type="text"
+                value={config.data || '{{input}}'}
+                onChange={(e) => handleChange('data', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="e.g. {{nodeId.data}}"
+              />
+            </div>
+          </div>
+        );
+
+      case 'emailSender':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Recipient Email</label>
+              <input
+                type="text"
+                value={config.recipient || ''}
+                onChange={(e) => handleChange('recipient', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="example@mail.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Subject</label>
+              <input
+                type="text"
+                value={config.subject || ''}
+                onChange={(e) => handleChange('subject', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="Alert Subject"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Email Body</label>
+              <textarea
+                value={config.body || ''}
+                onChange={(e) => handleChange('body', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                rows={4}
+                placeholder="Hi user, here is your summary: {{nodeId.summary}}"
+              />
+            </div>
+          </div>
+        );
+
+      case 'webSearch':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Search Query</label>
+              <input
+                type="text"
+                value={config.query || ''}
+                onChange={(e) => handleChange('query', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="e.g. {{input.companyName}} stock price"
+              />
+            </div>
+          </div>
+        );
+
+      case 'delay':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Duration (ms)</label>
+              <input
+                type="number"
+                value={config.duration || 1000}
+                onChange={(e) => handleChange('duration', parseInt(e.target.value))}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="1000"
+              />
             </div>
           </div>
         );
@@ -206,21 +300,21 @@ const NodeConfigPanel = ({ node, onUpdate, onClose }) => {
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Left Operand</label>
+              <label className="block text-sm font-medium mb-1">Left Operand</label>
               <input
                 type="text"
                 value={config.leftOperand || ''}
                 onChange={(e) => handleChange('leftOperand', e.target.value)}
-                placeholder="e.g., nodeId.output"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="e.g. {{nodeId.status}}"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Operator</label>
+              <label className="block text-sm font-medium mb-1">Operator</label>
               <select
                 value={config.operator || 'equals'}
                 onChange={(e) => handleChange('operator', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white"
               >
                 <option value="equals">Equals</option>
                 <option value="notEquals">Not Equals</option>
@@ -231,92 +325,48 @@ const NodeConfigPanel = ({ node, onUpdate, onClose }) => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Right Operand</label>
+              <label className="block text-sm font-medium mb-1">Right Operand</label>
               <input
                 type="text"
                 value={config.rightOperand || ''}
                 onChange={(e) => handleChange('rightOperand', e.target.value)}
-                placeholder="Comparison value"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="value"
               />
             </div>
           </div>
         );
 
-      case 'apiRequest':
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">URL</label>
-              <input
-                type="text"
-                value={config.url || ''}
-                onChange={(e) => handleChange('url', e.target.value)}
-                placeholder="https://api.example.com/endpoint"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Method</label>
-              <select
-                value={config.method || 'GET'}
-                onChange={(e) => handleChange('method', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="GET">GET</option>
-                <option value="POST">POST</option>
-                <option value="PUT">PUT</option>
-                <option value="PATCH">PATCH</option>
-                <option value="DELETE">DELETE</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Headers (JSON)</label>
-              <textarea
-                value={JSON.stringify(config.headers || {}, null, 2)}
-                onChange={(e) => {
-                  try {
-                    handleChange('headers', JSON.parse(e.target.value));
-                  } catch (err) {
-                    // Invalid JSON, keep typing
-                  }
-                }}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Body Source (optional)</label>
-              <input
-                type="text"
-                value={config.bodySource || ''}
-                onChange={(e) => handleChange('bodySource', e.target.value)}
-                placeholder="e.g., nodeId.output"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        );
-
+      case 'exportNode':
       case 'outputNode':
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Output Source</label>
+              <label className="block text-sm font-medium mb-1">Data to Export</label>
               <input
                 type="text"
-                value={config.outputSource || ''}
-                onChange={(e) => handleChange('outputSource', e.target.value)}
-                placeholder="e.g., nodeId.response"
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={config.exportSource || ''}
+                onChange={(e) => handleChange('exportSource', e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                placeholder="e.g. {{nodeId.response}}"
               />
-              <p className="text-xs text-gray-400 mt-1">Specify which node output to use as final result</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Export Format</label>
+              <select
+                value={config.format || 'json'}
+                onChange={(e) => handleChange('format', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-white/10 rounded-lg text-white"
+              >
+                <option value="json">JSON</option>
+                <option value="csv">CSV (Plain Text)</option>
+              </select>
             </div>
           </div>
         );
 
       default:
-        return <div className="text-gray-400">No configuration available for this node type.</div>;
+        return <div className="text-gray-400">Configure parameters in fields below.</div>;
     }
   };
 
@@ -327,65 +377,62 @@ const NodeConfigPanel = ({ node, onUpdate, onClose }) => {
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: 400, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed right-0 top-0 h-full w-96 bg-gray-900/95 backdrop-blur-xl border-l border-white/10 shadow-2xl z-50 overflow-y-auto"
+        className="fixed right-0 top-0 h-full w-96 bg-gray-950 border-l border-white/10 shadow-2xl z-50 overflow-y-auto flex flex-col"
       >
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-xl font-bold text-white">Configure Node</h3>
-              <p className="text-sm text-gray-400 mt-1">{config.label || node.type}</p>
+        <div className="p-6 flex-1 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-white">Config Settings</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{node.type}</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 transition-colors"
+              >
+                <X size={18} />
+              </button>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <X size={20} />
-            </button>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Node Title</label>
+                <input
+                  type="text"
+                  value={config.label || ''}
+                  onChange={(e) => handleChange('label', e.target.value)}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                  placeholder="Custom label"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Max Retries</label>
+                <input
+                  type="number"
+                  value={config.retries || 3}
+                  onChange={(e) => handleChange('retries', parseInt(e.target.value))}
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                  placeholder="3"
+                />
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 pt-4">
+              {renderConfigFields()}
+            </div>
           </div>
 
-          {/* Basic Info */}
-          <div className="space-y-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Label</label>
-              <input
-                type="text"
-                value={config.label || ''}
-                onChange={(e) => handleChange('label', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Node label"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
-              <textarea
-                value={config.description || ''}
-                onChange={(e) => handleChange('description', e.target.value)}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={2}
-                placeholder="Optional description"
-              />
-            </div>
-          </div>
-
-          {/* Node-specific Config */}
-          <div className="mb-6">
-            <h4 className="text-sm font-semibold mb-4 text-gray-300">Node Configuration</h4>
-            {renderConfigFields()}
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-2 mt-8 pt-4 border-t border-white/10">
             <button
               onClick={handleSave}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium text-white text-sm transition-colors"
             >
-              <Save size={18} />
+              <Save size={16} />
               Save Changes
             </button>
             <button
               onClick={onClose}
-              className="px-4 py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors"
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-lg text-gray-300 text-sm transition-colors"
             >
               Cancel
             </button>

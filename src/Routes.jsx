@@ -10,6 +10,7 @@ import AIImageProcessingLab from './pages/ai-image-processing-lab';
 import UserRegistration from './pages/user-registration';
 import TextStudio from './pages/text-studio';
 import AgentBuilder from './pages/agent-builder';
+import AgentWorkflows from './pages/agent-workflows';
 import WorkflowsList from './pages/workflows-list';
 import KnowledgeVault from './pages/knowledge-vault';
 import Collaboration from './pages/collaboration';
@@ -72,6 +73,11 @@ const Routes = () => {
           <Route path="/agent-builder" element={
             <AuthGuard requireAuth={true}>
               <AgentBuilder />
+            </AuthGuard>
+          } />
+          <Route path="/agent-workflows" element={
+            <AuthGuard requireAuth={true}>
+              <AgentWorkflows />
             </AuthGuard>
           } />
           <Route path="/workflows" element={

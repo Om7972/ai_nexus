@@ -7,6 +7,7 @@ import Button from './Button';
 
 const NAV_ITEMS = [
   { name: 'Dashboard', path: '/main-dashboard', icon: 'LayoutDashboard', description: 'Overview & metrics' },
+  { name: 'Agent Workflows', path: '/agent-workflows', icon: 'GitBranch', description: 'Visual automation builder' },
   { name: 'Text Studio', path: '/text-studio', icon: 'FileText', description: 'Content generation' },
   { name: 'Image Lab', path: '/ai-image-processing-lab', icon: 'Image', description: 'Visual processing' },
   { name: 'Data Workspace', path: '/data-workspace', icon: 'BarChart3', description: 'Analytics & insights' },
