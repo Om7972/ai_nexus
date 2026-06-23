@@ -16,6 +16,7 @@ import KnowledgeVault from './pages/knowledge-vault';
 import Collaboration from './pages/collaboration';
 import CostCenter from './pages/cost-center';
 import ResearchCopilot from './pages/research-copilot';
+import MemoryCenter from './pages/memory-center';
 
 // New Individual Account/Settings Pages
 import UserProfile from './pages/user-profile';
@@ -105,6 +106,11 @@ const Routes = () => {
           <Route path="/research-copilot" element={
             <AuthGuard requireAuth={true}>
               <ResearchCopilot />
+            </AuthGuard>
+          } />
+          <Route path="/memory-center" element={
+            <AuthGuard requireAuth={true}>
+              <MemoryCenter />
             </AuthGuard>
           } />
           <Route path="/user-profile" element={

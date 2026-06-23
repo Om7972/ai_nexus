@@ -37,6 +37,7 @@ import knowledgeRoutes from './routes/knowledgeRoutes.js';
 import collaborationRoutes from './routes/collaboration/index.js';
 import costRoutes from './routes/costRoutes.js';
 import researchRoutes from './routes/researchRoutes.js';
+import memoryRoutes from './routes/memoryRoutes.js';
 
 // ── App initialization ────────────────────────────────────────────────────────
 const app = express();
@@ -128,6 +129,7 @@ app.use('/api/v1/knowledge', knowledgeRoutes);
 app.use('/api/v1/collaboration', collaborationRoutes);
 app.use('/api/v1/costs', costRoutes);
 app.use('/api/v1/research', researchRoutes);
+app.use('/api/v1/memory', memoryRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. 404 HANDLER  (catch-all – must be after all routes)

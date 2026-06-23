@@ -4,6 +4,8 @@ import Usage from '../models/Usage.js';
 import User from '../models/User.js';
 import emailService from './emailService.js';
 import logger from '../utils/logger.js';
+import Memory from '../models/Memory.js';
+import { generateWeeklyInsight } from './insight.service.js';
 
 // Initialize Cron Jobs
 export const initializeCronJobs = () => {
@@ -166,6 +168,40 @@ export const initializeCronJobs = () => {
       }
     } catch (error) {
       logger.error('💥 Error in Hourly Sweeper Cron Job:', error);
+    }
+  });
+
+  // 4. Memory Cleanup Job: Run at 01:00 AM daily
+  cron.schedule('0 1 * * *', async () => {
+    logger.info('⏰ Running Memory Cleanup Job...');
+    try {
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      const result = await Memory.deleteMany({
+        favorite: false,
+        'metadata.autoExtracted': true,
+        createdAt: { $lt: ninetyDaysAgo }
+      });
+      logger.info(`✅ Memory cleanup completed. Removed ${result.deletedCount} old un-favorited memories.`);
+    } catch (error) {
+      logger.error('💥 Error in Memory Cleanup Cron Job:', error);
+    }
+  });
+
+  // 5. Weekly Insights Report Job: Run at 00:00 AM every Sunday (0 0 * * 0)
+  cron.schedule('0 0 * * 0', async () => {
+    logger.info('⏰ Running Weekly Memory Insights Generation...');
+    try {
+      const activeUsers = await User.find({ status: 'active' });
+      for (const user of activeUsers) {
+        try {
+          await generateWeeklyInsight(user._id);
+        } catch (err) {
+          logger.error(`💥 Failed to generate weekly insights for user ${user._id}:`, err);
+        }
+      }
+    } catch (error) {
+      logger.error('💥 Error in Weekly Insights Cron Job:', error);
     }
   });
 

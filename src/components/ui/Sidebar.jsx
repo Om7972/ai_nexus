@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { name: 'Data Workspace', path: '/data-workspace', icon: 'BarChart3', description: 'Analytics & insights' },
   { name: 'Research Copilot', path: '/research-copilot', icon: 'BookOpen', description: 'RAG source indexing' },
   { name: 'Cost Center', path: '/cost-center', icon: 'Coins', description: 'Usage & budget control' },
+  { name: 'Memory Engine', path: '/memory-center', icon: 'Brain', description: 'Semantic context builder' },
 ];
 
 const RECENT = [
