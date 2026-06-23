@@ -22,6 +22,7 @@ import connectDB from './config/db.js';
 import config from './config/config.js';
 import logger from './utils/logger.js';
 import socketService from './services/socketService.js';
+import { initializeCronJobs } from './services/cronJobs.js';
 
 
 // ── Handle synchronous uncaught exceptions ────────────────────────────────────
@@ -38,6 +39,7 @@ process.on('uncaughtException', (err) => {
     // Create HTTP server and initialize Socket.IO
     const httpServer = createServer(app);
     socketService.initialize(httpServer);
+    initializeCronJobs();
 
     const server = httpServer.listen(config.port, () => {
         logger.info(`🚀 Server running in ${config.env} mode on port ${config.port}`);

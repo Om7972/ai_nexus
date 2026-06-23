@@ -8,7 +8,7 @@ import { aiManager } from './aiProviders/index.js';
  * Real implementation routing via the AI Provider Abstraction Layer (aiManager).
  */
 export const generateText = async ({ prompt, tone, model, length, userId, workspaceId }) => {
-    const generationResult = await aiManager.generateText({ prompt, tone, model, length });
+    const generationResult = await aiManager.generateText({ prompt, tone, model, length, userId, feature: 'text-studio' });
 
     // Save to MongoDB
     const textGenRecord = await TextGeneration.create({
@@ -40,7 +40,7 @@ export const getHistory = async (userId) => {
 };
 
 export const generateImage = async ({ prompt, resolution, model, userId, workspaceId }) => {
-    const generationResult = await aiManager.generateImage({ prompt, resolution, model });
+    const generationResult = await aiManager.generateImage({ prompt, resolution, model, userId, feature: 'image-lab' });
 
     const imageGenRecord = await ImageAsset.create({
         user: userId,

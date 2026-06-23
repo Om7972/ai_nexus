@@ -14,6 +14,7 @@ import AgentWorkflows from './pages/agent-workflows';
 import WorkflowsList from './pages/workflows-list';
 import KnowledgeVault from './pages/knowledge-vault';
 import Collaboration from './pages/collaboration';
+import CostCenter from './pages/cost-center';
 
 // New Individual Account/Settings Pages
 import UserProfile from './pages/user-profile';
@@ -93,6 +94,11 @@ const Routes = () => {
           <Route path="/collaboration" element={
             <AuthGuard requireAuth={true}>
               <Collaboration />
+            </AuthGuard>
+          } />
+          <Route path="/cost-center" element={
+            <AuthGuard requireAuth={true}>
+              <CostCenter />
             </AuthGuard>
           } />
           <Route path="/user-profile" element={

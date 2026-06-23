@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { name: 'Text Studio', path: '/text-studio', icon: 'FileText', description: 'Content generation' },
   { name: 'Image Lab', path: '/ai-image-processing-lab', icon: 'Image', description: 'Visual processing' },
   { name: 'Data Workspace', path: '/data-workspace', icon: 'BarChart3', description: 'Analytics & insights' },
+  { name: 'Cost Center', path: '/cost-center', icon: 'Coins', description: 'Usage & budget control' },
 ];
 
 const RECENT = [

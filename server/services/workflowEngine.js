@@ -204,7 +204,9 @@ async function executeTextGeneratorNode(node, context, execution) {
     prompt,
     model,
     tone: node.data?.tone,
-    length: node.data?.length
+    length: node.data?.length,
+    userId: execution.owner,
+    feature: 'workflows'
   });
 
   if (res.tokensUsed) {
@@ -222,7 +224,9 @@ async function executeImageGeneratorNode(node, context, execution) {
   const res = await aiManager.generateImage({
     prompt,
     model,
-    resolution: size
+    resolution: size,
+    userId: execution.owner,
+    feature: 'workflows'
   });
 
   return { imageUrl: res.imageUrl || res.url || res };
@@ -239,7 +243,9 @@ async function executeOCRNode(node, context, execution) {
   const prompt = 'Extract all readable text from this image exactly as it appears.';
   const res = await aiManager.generateText({
     prompt: `${prompt}\n[Source: ${JSON.stringify(source)}]`,
-    model: 'gemini-1.5-pro'
+    model: 'gemini-1.5-pro',
+    userId: execution.owner,
+    feature: 'workflows'
   });
 
   return { text: res.content };
@@ -252,7 +258,9 @@ async function executeSummarizerNode(node, context, execution) {
   const prompt = `Summarize the following text in a ${detail} manner:\n\n${textToSummarize}`;
   const res = await aiManager.generateText({
     prompt,
-    model: 'gemini-1.5-pro'
+    model: 'gemini-1.5-pro',
+    userId: execution.owner,
+    feature: 'workflows'
   });
 
   return { summary: res.content };
@@ -265,7 +273,9 @@ async function executeTranslatorNode(node, context, execution) {
   const prompt = `Translate the following text to ${targetLanguage}. Maintain tone and formatting:\n\n${textToTranslate}`;
   const res = await aiManager.generateText({
     prompt,
-    model: 'gemini-1.5-pro'
+    model: 'gemini-1.5-pro',
+    userId: execution.owner,
+    feature: 'workflows'
   });
 
   return { translatedText: res.content, language: targetLanguage };
@@ -277,7 +287,9 @@ async function executeDataAnalyzerNode(node, context, execution) {
   const prompt = `Analyze the following data and extract key findings, trends, and summary metrics. Format in clear markdown:\n\n${data}`;
   const res = await aiManager.generateText({
     prompt,
-    model: 'gemini-1.5-pro'
+    model: 'gemini-1.5-pro',
+    userId: execution.owner,
+    feature: 'workflows'
   });
 
   return { analysis: res.content };
@@ -309,7 +321,9 @@ async function executeWebSearchNode(node, context, execution) {
   const prompt = `Search web for: "${query}". Provide 3 realistic search snippet results with titles and URLs. Format as JSON.`;
   const res = await aiManager.generateText({
     prompt,
-    model: 'gemini-1.5-pro'
+    model: 'gemini-1.5-pro',
+    userId: execution.owner,
+    feature: 'workflows'
   });
 
   let results;
