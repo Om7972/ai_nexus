@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { API_BASE_URL } from '../../utils/api';
 
 export const generateImage = createAsyncThunk(
     'imageLab/generate',
     async (payload, { rejectWithValue }) => {
         try {
-            const response = await fetch('/api/v1/ai/generate-image', {
+            const response = await fetch(`${API_BASE_URL}/ai/generate-image`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -22,7 +23,7 @@ export const processImage = createAsyncThunk(
     'imageLab/process',
     async (formData, { rejectWithValue }) => {
         try {
-            const response = await fetch('/api/v1/ai/process-image', {
+            const response = await fetch(`${API_BASE_URL}/ai/process-image`, {
                 method: 'POST',
                 body: formData // Note: Content-Type is automatically set by fetch when passing FormData
             });
@@ -39,7 +40,7 @@ export const fetchImageHistory = createAsyncThunk(
     'imageLab/fetchHistory',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await fetch('/api/v1/ai/image-history');
+            const response = await fetch(`${API_BASE_URL}/ai/image-history`);
             const data = await response.json();
             if (!response.ok) return rejectWithValue(data.message || 'Failed to fetch history');
             return data.data;

@@ -74,9 +74,7 @@ ai-nexus/
 ### Prerequisites
 
 - Node.js >= 18.0.0
-- MongoDB >= 7.0
-- Redis >= 7.0 (optional but recommended)
-- Docker & Docker Compose (for containerized deployment)
+- MongoDB (local or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas))
 
 ### Local Development
 
@@ -106,13 +104,7 @@ cp server/.env.example server/.env
 # Edit .env files with your configuration
 ```
 
-4. **Start MongoDB and Redis**
-```bash
-# Using Docker Compose (recommended)
-docker-compose up -d mongodb redis
-
-# Or install locally and start services
-```
+4. **Start MongoDB** (local install or Atlas connection string in `server/.env`)
 
 5. **Run the application**
 ```bash
@@ -126,61 +118,25 @@ npm start
 ```
 
 6. **Access the application**
-- Frontend: http://localhost:3000
+- Frontend: http://localhost:5173
 - Backend API: http://localhost:5000/api/v1
 - API Documentation: http://localhost:5000/api-docs
 
-### Docker Deployment
-
-```bash
-# Build and start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
-
 ## 📦 Deployment
 
-### Deploy to Vercel (Frontend)
+Deploy the **backend on Render** and **frontend on Netlify**.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/ai-nexus)
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for the full step-by-step guide.
 
-```bash
-npm install -g vercel
-vercel --prod
-```
+| Component | Platform | Root Directory |
+|-----------|----------|----------------|
+| Backend API | [Render](https://render.com) | `server` |
+| Frontend | [Netlify](https://netlify.com) | repo root |
 
-### Deploy to Render (Backend)
+**Key environment variables:**
 
-1. Connect your repository to Render
-2. Create a new Web Service
-3. Set environment variables from `.env.example`
-4. Deploy!
-
-### Deploy to Railway
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/yourusername/ai-nexus)
-
-### Deploy to AWS EC2
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed AWS deployment instructions.
-
-### Deploy with Docker
-
-```bash
-# Build images
-docker-compose build
-
-# Push to registry
-docker-compose push
-
-# Deploy on your server
-docker-compose up -d
-```
+- **Netlify:** `VITE_API_URL=https://your-api.onrender.com/api/v1`
+- **Render:** `MONGO_URI`, `JWT_SECRET`, `CLIENT_ORIGIN=https://your-site.netlify.app`
 
 ## 🔧 Configuration
 

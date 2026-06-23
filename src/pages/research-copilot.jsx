@@ -31,7 +31,9 @@ import {
 import Layout from '../components/Layout';
 import { useToast } from '../context/ThemeContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+import { API_BASE_URL } from '../utils/api';
+
+const API_URL = API_BASE_URL;
 
 const ResearchCopilot = () => {
   const toast = useToast().toast;

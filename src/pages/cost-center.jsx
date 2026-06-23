@@ -39,7 +39,9 @@ import {
   CartesianGrid
 } from 'recharts';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+import { API_BASE_URL } from '../utils/api';
+
+const API_URL = API_BASE_URL;
 
 // Harmonies for Charts
 const CHART_COLORS = ['#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444'];

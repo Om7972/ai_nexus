@@ -10,7 +10,7 @@ import {
   setSocketConnected,
 } from '../store/slices/collaborationSlice';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { SOCKET_BASE_URL } from '../utils/api';
 
 /**
  * Custom hook for managing Socket.IO connection for real-time collaboration
@@ -27,7 +27,7 @@ export const useSocket = (documentId, enabled = true) => {
     if (!enabled || !documentId || !token) return;
 
     // Initialize Socket.IO connection
-    const socket = io(API_URL, {
+    const socket = io(SOCKET_BASE_URL, {
       auth: { token },
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

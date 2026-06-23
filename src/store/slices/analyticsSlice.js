@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { API_BASE_URL } from '../../utils/api';
 
 export const fetchAnalyticsOverview = createAsyncThunk(
     'analytics/fetchOverview',
@@ -8,7 +9,7 @@ export const fetchAnalyticsOverview = createAsyncThunk(
             if (dateRange?.startDate) queryParams.append('startDate', dateRange.startDate);
             if (dateRange?.endDate) queryParams.append('endDate', dateRange.endDate);
 
-            const res = await fetch(`/api/v1/analytics/overview?${queryParams.toString()}`);
+            const res = await fetch(`${API_BASE_URL}/analytics/overview?${queryParams.toString()}`);
             const data = await res.json();
             if (!res.ok) return rejectWithValue(data.message || 'Failed to fetch overview');
             return data.data; // { totalRequests, tokensUsed, activeProjects, imageGenerations }
@@ -26,7 +27,7 @@ export const fetchAnalyticsUsage = createAsyncThunk(
             if (dateRange?.startDate) queryParams.append('startDate', dateRange.startDate);
             if (dateRange?.endDate) queryParams.append('endDate', dateRange.endDate);
 
-            const res = await fetch(`/api/v1/analytics/usage?${queryParams.toString()}`);
+            const res = await fetch(`${API_BASE_URL}/analytics/usage?${queryParams.toString()}`);
             const data = await res.json();
             if (!res.ok) return rejectWithValue(data.message || 'Failed to fetch usage data');
             return data.data; // { lineChartData, pieChartData, barChartData }

@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import { API_BASE_URL } from '../../utils/api';
 
 // ── Axios instance pointing at the Express backend ────────────────────────────
 const api = axios.create({
-  baseURL: '/api/v1',       // proxied by Vite  → http://localhost:5000/api/v1
+  baseURL: API_BASE_URL,
   withCredentials: true,    // send/receive HTTP-only cookies (refresh token)
   headers: { 'Content-Type': 'application/json' },
 });

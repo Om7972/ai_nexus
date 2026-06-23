@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { API_BASE_URL } from '../../utils/api';
 
 export const generateAiText = createAsyncThunk(
     'textStudio/generateText',
     async (payload, { rejectWithValue }) => {
         try {
-            const response = await fetch('/api/v1/ai/generate-text', {
+            const response = await fetch(`${API_BASE_URL}/ai/generate-text`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -26,7 +27,7 @@ export const fetchGenerationHistory = createAsyncThunk(
     'textStudio/fetchHistory',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await fetch('/api/v1/ai/history');
+            const response = await fetch(`${API_BASE_URL}/ai/history`);
             const data = await response.json();
             if (!response.ok) {
                 return rejectWithValue(data.message || 'Failed to fetch history');

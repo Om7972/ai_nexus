@@ -10,6 +10,7 @@ import RegistrationForm from './components/RegistrationForm';
 import TermsAndPrivacy from './components/TermsAndPrivacy';
 import LoginRedirect from './components/LoginRedirect';
 import SuccessMessage from './components/SuccessMessage';
+import { API_BASE_URL } from '../../utils/api';
 
 const UserRegistration = () => {
   const dispatch = useDispatch();
@@ -75,7 +76,7 @@ const UserRegistration = () => {
   const handleResendEmail = async () => {
     try {
       const { default: axios } = await import('axios');
-      await axios.post('/api/v1/auth/resend-verification', {}, { withCredentials: true });
+      await axios.post(`${API_BASE_URL}/auth/resend-verification`, {}, { withCredentials: true });
     } catch {
       setLocalError('Failed to resend verification email. Please try again.');
     }
