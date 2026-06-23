@@ -15,6 +15,7 @@ import WorkflowsList from './pages/workflows-list';
 import KnowledgeVault from './pages/knowledge-vault';
 import Collaboration from './pages/collaboration';
 import CostCenter from './pages/cost-center';
+import ResearchCopilot from './pages/research-copilot';
 
 // New Individual Account/Settings Pages
 import UserProfile from './pages/user-profile';
@@ -99,6 +100,11 @@ const Routes = () => {
           <Route path="/cost-center" element={
             <AuthGuard requireAuth={true}>
               <CostCenter />
+            </AuthGuard>
+          } />
+          <Route path="/research-copilot" element={
+            <AuthGuard requireAuth={true}>
+              <ResearchCopilot />
             </AuthGuard>
           } />
           <Route path="/user-profile" element={
