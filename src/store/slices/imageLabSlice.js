@@ -5,9 +5,13 @@ export const generateImage = createAsyncThunk(
     'imageLab/generate',
     async (payload, { rejectWithValue }) => {
         try {
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
             const response = await fetch(`${API_BASE_URL}/ai/generate-image`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(payload)
             });
             const data = await response.json();
@@ -23,8 +27,12 @@ export const processImage = createAsyncThunk(
     'imageLab/process',
     async (formData, { rejectWithValue }) => {
         try {
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
             const response = await fetch(`${API_BASE_URL}/ai/process-image`, {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData // Note: Content-Type is automatically set by fetch when passing FormData
             });
             const data = await response.json();
@@ -40,7 +48,12 @@ export const fetchImageHistory = createAsyncThunk(
     'imageLab/fetchHistory',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/ai/image-history`);
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/ai/image-history`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await response.json();
             if (!response.ok) return rejectWithValue(data.message || 'Failed to fetch history');
             return data.data;

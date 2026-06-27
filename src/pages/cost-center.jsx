@@ -91,7 +91,7 @@ const CostCenter = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
 
       const [overviewRes, analyticsRes, recsRes] = await Promise.all([
         axios.get(`${API_URL}/costs/overview`, { headers }),
@@ -134,7 +134,7 @@ const CostCenter = () => {
     e.preventDefault();
     setUpdatingBudget(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const response = await axios.post(`${API_URL}/costs/budget`, budgetForm, { headers });
 
       if (response.data?.success) {

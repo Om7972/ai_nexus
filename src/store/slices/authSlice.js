@@ -10,9 +10,15 @@ const api = axios.create({
 });
 
 // ── Token helper ──────────────────────────────────────────────────────────────
-const getStoredToken = () => localStorage.getItem('accessToken');
-const setStoredToken = (token) => localStorage.setItem('accessToken', token);
-const clearStoredToken = () => localStorage.removeItem('accessToken');
+const getStoredToken = () => localStorage.getItem('accessToken') || localStorage.getItem('token');
+const setStoredToken = (token) => {
+  localStorage.setItem('accessToken', token);
+  localStorage.setItem('token', token);
+};
+const clearStoredToken = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('token');
+};
 
 // ── Attach access token to every request ─────────────────────────────────────
 api.interceptors.request.use((config) => {

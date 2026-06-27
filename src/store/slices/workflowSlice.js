@@ -14,7 +14,7 @@ export const fetchWorkflows = createAsyncThunk(
       if (search) params.append('search', search);
 
       const response = await axios.get(`${API_URL}/workflows?${params}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data;
     } catch (error) {
@@ -28,7 +28,7 @@ export const fetchWorkflow = createAsyncThunk(
   async (workflowId, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_URL}/workflows/${workflowId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {
@@ -42,7 +42,7 @@ export const createWorkflow = createAsyncThunk(
   async (workflowData, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${API_URL}/workflows`, workflowData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {
@@ -56,7 +56,7 @@ export const updateWorkflow = createAsyncThunk(
   async ({ id, data }, { rejectWithValue }) => {
     try {
       const response = await axios.patch(`${API_URL}/workflows/${id}`, data, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {
@@ -70,7 +70,7 @@ export const deleteWorkflow = createAsyncThunk(
   async (workflowId, { rejectWithValue }) => {
     try {
       await axios.delete(`${API_URL}/workflows/${workflowId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return workflowId;
     } catch (error) {
@@ -84,7 +84,7 @@ export const duplicateWorkflow = createAsyncThunk(
   async (workflowId, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${API_URL}/workflows/${workflowId}/duplicate`, {}, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {
@@ -98,7 +98,7 @@ export const executeWorkflow = createAsyncThunk(
   async ({ workflowId, input }, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${API_URL}/workflows/${workflowId}/execute`, { input }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {
@@ -112,7 +112,7 @@ export const fetchExecution = createAsyncThunk(
   async (executionId, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_URL}/workflows/executions/${executionId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {
@@ -126,7 +126,7 @@ export const fetchWorkflowVersions = createAsyncThunk(
   async (workflowId, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_URL}/workflows/${workflowId}/versions`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {

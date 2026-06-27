@@ -9,7 +9,12 @@ export const fetchAnalyticsOverview = createAsyncThunk(
             if (dateRange?.startDate) queryParams.append('startDate', dateRange.startDate);
             if (dateRange?.endDate) queryParams.append('endDate', dateRange.endDate);
 
-            const res = await fetch(`${API_BASE_URL}/analytics/overview?${queryParams.toString()}`);
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/analytics/overview?${queryParams.toString()}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             if (!res.ok) return rejectWithValue(data.message || 'Failed to fetch overview');
             return data.data; // { totalRequests, tokensUsed, activeProjects, imageGenerations }
@@ -27,7 +32,12 @@ export const fetchAnalyticsUsage = createAsyncThunk(
             if (dateRange?.startDate) queryParams.append('startDate', dateRange.startDate);
             if (dateRange?.endDate) queryParams.append('endDate', dateRange.endDate);
 
-            const res = await fetch(`${API_BASE_URL}/analytics/usage?${queryParams.toString()}`);
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/analytics/usage?${queryParams.toString()}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             if (!res.ok) return rejectWithValue(data.message || 'Failed to fetch usage data');
             return data.data; // { lineChartData, pieChartData, barChartData }

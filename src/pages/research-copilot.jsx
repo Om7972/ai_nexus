@@ -95,7 +95,7 @@ const ResearchCopilot = () => {
   // Fetch History on Mount
   const fetchHistory = async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const res = await axios.get(`${API_URL}/research/history`, { headers });
       if (res.data?.success) {
         const { sessions, sources, notes, citations } = res.data.data;
@@ -163,7 +163,7 @@ const ResearchCopilot = () => {
     }));
 
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const res = await axios.post(`${API_URL}/research/chat`, {
         sessionId: activeSession?._id || undefined,
         message: userMsg,
@@ -197,7 +197,7 @@ const ResearchCopilot = () => {
     setUploadContradictions([]);
 
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       let res;
 
       if (uploadType === 'url') {
@@ -261,7 +261,7 @@ const ResearchCopilot = () => {
     }
     setNotesLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const res = await axios.post(`${API_URL}/research/generate-notes`, {
         sourceIds: selectedSources,
         sessionId: activeSession?._id || undefined
@@ -291,7 +291,7 @@ const ResearchCopilot = () => {
     e.preventDefault();
     setCitationLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const res = await axios.post(`${API_URL}/research/generate-citations`, {
         sessionId: activeSession?._id || undefined,
         title: citationForm.title,
@@ -318,7 +318,7 @@ const ResearchCopilot = () => {
   const handleCreateMindMap = async () => {
     setMindmapLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const res = await axios.post(`${API_URL}/research/create-mindmap`, {
         sourceId: mindmapTargetType === 'source' ? mindmapTargetId : undefined,
         noteId: mindmapTargetType === 'note' ? mindmapTargetId : undefined,

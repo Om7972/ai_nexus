@@ -294,7 +294,7 @@ const AgentWorkflows = () => {
       const response = await axios.post(
         `${API_URL}/workflows/${currentWorkflow._id}/versions/${versionId}/restore`,
         {},
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` } }
       );
       dispatch(fetchWorkflow(currentWorkflow._id));
       dispatch(fetchWorkflowVersions(currentWorkflow._id));
@@ -348,7 +348,7 @@ const AgentWorkflows = () => {
       pollTimerRef.current = setInterval(async () => {
         const fetchRes = await axios.get(
           `${API_URL}/workflows/executions/${res.executionId}`,
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          { headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` } }
         );
         const data = fetchRes.data.data;
         if (data.executionLogs) {

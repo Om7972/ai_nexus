@@ -94,7 +94,7 @@ const MemoryCenter = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       
       const [memoriesRes, goalsRes, projectsRes, insightsRes] = await Promise.all([
         axios.get(`${API_URL}/memory`, { headers }),
@@ -147,7 +147,7 @@ const MemoryCenter = () => {
     }
 
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       if (useSemanticSearch) {
         // Vector Cosine Similarity Search
         const res = await axios.post(`${API_URL}/memory/search`, {
@@ -179,7 +179,7 @@ const MemoryCenter = () => {
 
     setActionLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const tagsArray = newMemory.tags.split(',').map(t => t.trim()).filter(Boolean);
       
       const res = await axios.post(`${API_URL}/memory`, {
@@ -205,7 +205,7 @@ const MemoryCenter = () => {
   // Delete Memory entry
   const handleDeleteMemory = async (id) => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const res = await axios.delete(`${API_URL}/memory/${id}`, { headers });
       if (res.data?.success) {
         setMemories(prev => prev.filter(m => m._id !== id));
@@ -223,7 +223,7 @@ const MemoryCenter = () => {
 
     setActionLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const res = await axios.post(`${API_URL}/memory/goals`, newGoal, { headers });
       if (res.data?.success) {
         setGoals(prev => [res.data.data, ...prev]);
@@ -240,7 +240,7 @@ const MemoryCenter = () => {
   // Update Goal Progress / State
   const handleUpdateGoalProgress = async (id, currentProgress, currentStatus) => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const nextProgress = currentProgress >= 100 ? 0 : Math.min(100, currentProgress + 25);
       const nextStatus = nextProgress === 100 ? 'completed' : 'active';
       
@@ -265,7 +265,7 @@ const MemoryCenter = () => {
 
     setActionLoading(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const tagsArray = newProject.tags.split(',').map(t => t.trim()).filter(Boolean);
       
       const res = await axios.post(`${API_URL}/memory/projects`, {
@@ -289,7 +289,7 @@ const MemoryCenter = () => {
   const handleCompileWeeklyReport = async () => {
     setWeeklyGenerating(true);
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
       const res = await axios.post(`${API_URL}/memory/insights/trigger`, {}, { headers });
       if (res.data?.success) {
         setInsights(prev => [res.data.data, ...prev]);
@@ -629,7 +629,7 @@ const MemoryCenter = () => {
                             onChange={(e) => {
                               setCategoryFilter(e.target.value);
                               // Auto trigger fetch
-                              const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+                              const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
                               axios.get(`${API_URL}/memory?category=${e.target.value}${onlyFavorites ? '&favorite=true' : ''}`, { headers })
                                 .then(res => res.data?.success && setMemories(res.data.data));
                             }}
@@ -648,7 +648,7 @@ const MemoryCenter = () => {
                           onClick={() => {
                             const nextFav = !onlyFavorites;
                             setOnlyFavorites(nextFav);
-                            const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+                             const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
                             axios.get(`${API_URL}/memory?favorite=${nextFav}${categoryFilter ? `&category=${categoryFilter}` : ''}`, { headers })
                               .then(res => res.data?.success && setMemories(res.data.data));
                           }}
@@ -709,7 +709,7 @@ const MemoryCenter = () => {
                                   key={idx}
                                   onClick={() => {
                                     setSelectedTag(tag);
-                                    const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+                                    const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
                                     axios.get(`${API_URL}/memory?tag=${tag}`, { headers })
                                       .then(res => res.data?.success && setMemories(res.data.data));
                                   }}
@@ -737,7 +737,7 @@ const MemoryCenter = () => {
                           <div className="flex items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={async () => {
-                                const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+                                const headers = { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` };
                                 try {
                                   const res = await axios.put(`${API_URL}/memory/goals/${mem._id}`, {
                                     // Just toggle favorite on memory using custom update route or similar endpoint

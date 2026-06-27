@@ -5,10 +5,12 @@ export const generateAiText = createAsyncThunk(
     'textStudio/generateText',
     async (payload, { rejectWithValue }) => {
         try {
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
             const response = await fetch(`${API_BASE_URL}/ai/generate-text`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(payload)
             });
@@ -27,7 +29,12 @@ export const fetchGenerationHistory = createAsyncThunk(
     'textStudio/fetchHistory',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/ai/history`);
+            const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/ai/history`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await response.json();
             if (!response.ok) {
                 return rejectWithValue(data.message || 'Failed to fetch history');

@@ -16,7 +16,7 @@ export const uploadFile = createAsyncThunk(
 
       const response = await axios.post(`${API_URL}/knowledge/upload`, formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}`,
           'Content-Type': 'multipart/form-data'
         }
       });
@@ -38,7 +38,7 @@ export const fetchFiles = createAsyncThunk(
       if (search) params.append('search', search);
 
       const response = await axios.get(`${API_URL}/knowledge/files?${params}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data;
     } catch (error) {
@@ -52,7 +52,7 @@ export const fetchFile = createAsyncThunk(
   async (fileId, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_URL}/knowledge/files/${fileId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {
@@ -66,7 +66,7 @@ export const updateFile = createAsyncThunk(
   async ({ id, data }, { rejectWithValue }) => {
     try {
       const response = await axios.patch(`${API_URL}/knowledge/files/${id}`, data, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {
@@ -80,7 +80,7 @@ export const deleteFile = createAsyncThunk(
   async (fileId, { rejectWithValue }) => {
     try {
       await axios.delete(`${API_URL}/knowledge/files/${fileId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return fileId;
     } catch (error) {
@@ -96,7 +96,7 @@ export const searchKnowledge = createAsyncThunk(
       const response = await axios.post(`${API_URL}/knowledge/search`, 
         { query, fileIds, limit, threshold },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
         }
       );
       return response.data.data;
@@ -113,7 +113,7 @@ export const chatWithKnowledge = createAsyncThunk(
       const response = await axios.post(`${API_URL}/knowledge/chat`, 
         { message, sessionId, fileIds },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
         }
       );
       return response.data.data;
@@ -128,7 +128,7 @@ export const fetchChatSessions = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_URL}/knowledge/chat/sessions`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {
@@ -142,7 +142,7 @@ export const fetchStatistics = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_URL}/knowledge/stats`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('token')}` }
       });
       return response.data.data;
     } catch (error) {
