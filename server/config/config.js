@@ -29,7 +29,7 @@ const config = {
 
     cors: {
         // Supports comma-separated list: "http://localhost:5173,https://app.ainexus.dev"
-        origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+        origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173,https://ainexus0.netlify.app',
     },
 
     clientUrl: process.env.CLIENT_ORIGIN || 'http://localhost:5173',

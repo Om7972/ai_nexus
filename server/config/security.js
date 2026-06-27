@@ -77,13 +77,25 @@ const allowedOrigins = config.cors.origin.split(',').map((o) => o.trim());
 
 export const corsMiddleware = cors({
     origin: (origin, callback) => {
-        // Allow server-to-server requests (no Origin header) in dev
-        if (!origin && config.env !== 'production') return callback(null, true);
-        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-        callback(new Error(`CORS: origin "${origin}" is not allowed.`));
+        // Allow server-to-server requests (no Origin header)
+        if (!origin) return callback(null, true);
+        
+        // Check if origin is explicitly allowed
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        
+        // Allow Netlify subdomains
+        if (origin.endsWith('.netlify.app')) return callback(null, true);
+        
+        // Allow local dev origins on other ports
+        if (config.env !== 'production' && (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))) {
+            return callback(null, true);
+        }
+        
+        logger.warn(`[CORS] Blocked request from origin: ${origin}`);
+        callback(null, false);
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'x-csrf-token'],
     credentials: true,
     maxAge: 86400,  // preflight cache: 24 hours
 });
